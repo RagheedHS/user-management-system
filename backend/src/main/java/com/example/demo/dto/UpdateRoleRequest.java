@@ -1,0 +1,25 @@
+package com.example.demo.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.Set;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class UpdateRoleRequest {
+    @NotBlank(message = "Description is required")
+    private String description;
+
+    @NotNull(message = "Role level is required")
+    private Integer roleLevel;
+
+    private Boolean active;
+    private Long parentRoleId;
+    private Set<Long> permissionIds;
+}
