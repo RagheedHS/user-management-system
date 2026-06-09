@@ -80,18 +80,20 @@ const RolesPage = () => {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Roles Management</h1>
-        <div className="flex items-center space-x-2">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
+        <h1 className="text-3xl font-bold text-[var(--text)]">Roles Management</h1>
+        <div className="flex flex-wrap items-center gap-3">
           <button onClick={handleAdd} className="og-btn og-btn-primary flex items-center space-x-2">
             <FiPlus /> <span>Add Role</span>
           </button>
-          <a href="/roles/hierarchy" className="inline-block ml-2 px-3 py-2 bg-gray-100 rounded hover:bg-gray-200 text-sm">View Hierarchy</a>
+          <a href="/roles/hierarchy" className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm text-[var(--text)] transition hover:bg-[var(--panel)]">
+            View Hierarchy
+          </a>
         </div>
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-start">
+        <div className="mb-6 p-4 rounded-2xl border border-red-500/20 bg-red-500/10 text-red-600 flex items-start">
           <FiAlertCircle className="mr-3 mt-0.5 flex-shrink-0" />
           <span>{error}</span>
         </div>
@@ -101,28 +103,28 @@ const RolesPage = () => {
         <table className="og-table">
           <thead>
             <tr>
-              <th>Role Name</th>
-              <th>Description</th>
-              <th>Level</th>
-              <th>Permissions</th>
-              <th>Status</th>
-              <th style={{ width: 140 }}>Actions</th>
+              <th className="text-[var(--text-muted)]">Role Name</th>
+              <th className="text-[var(--text-muted)]">Description</th>
+              <th className="text-[var(--text-muted)]">Level</th>
+              <th className="text-[var(--text-muted)]">Permissions</th>
+              <th className="text-[var(--text-muted)]">Status</th>
+              <th className="text-[var(--text-muted)]" style={{ width: 140 }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {roles.map((role) => (
-              <tr key={role.id}>
-                <td className="font-semibold">{role.name}</td>
-                <td className="text-white/70">{role.description}</td>
-                <td>{role.roleLevel}</td>
-                <td>{role.permissionIds ? role.permissionIds.length : 0} permissions</td>
+              <tr key={role.id} className="hover:bg-[var(--surface)] transition-colors">
+                <td className="font-semibold text-[var(--text)]">{role.name}</td>
+                <td className="text-[var(--text-muted)]">{role.description}</td>
+                <td className="text-[var(--text)]">{role.roleLevel}</td>
+                <td className="text-[var(--text)]">{role.permissionIds ? role.permissionIds.length : 0} permissions</td>
                 <td>
                   <span className={`og-badge ${role.active ? 'og-badge--active' : 'og-badge--inactive'}`}>
                     {role.active ? 'Active' : 'Inactive'}
                   </span>
                 </td>
                 <td>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-2">
                     <button onClick={() => handleEdit(role)} className="og-btn og-btn-ghost flex items-center gap-2">
                       <FiEdit /> <span className="text-sm">Edit</span>
                     </button>
@@ -136,7 +138,7 @@ const RolesPage = () => {
           </tbody>
         </table>
         {roles.length === 0 && (
-          <div className="text-center py-8 text-white/60">
+          <div className="text-center py-8 text-[var(--text-muted)]">
             No roles found. Click "Add Role" to create one.
           </div>
         )}

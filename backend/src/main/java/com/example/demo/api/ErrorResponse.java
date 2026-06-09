@@ -19,4 +19,8 @@ public class ErrorResponse {
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime timestamp = LocalDateTime.now();
+
+    public ErrorResponse(int status, String error, String message, List<String> details) {
+        this(status, error, message, details, LocalDateTime.now());
+    }
 }

@@ -41,7 +41,7 @@ const DashboardPage = () => {
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-blue-500 border-r-transparent"></div>
-          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+          <p className="mt-4 text-[var(--text-muted)]">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -50,8 +50,8 @@ const DashboardPage = () => {
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-semibold">Operational Dashboard</h1>
-        <div className="text-sm text-white/70">Last updated: just now</div>
+        <h1 className="text-2xl font-semibold text-[var(--text)]">Operational Dashboard</h1>
+        <div className="text-sm text-[var(--text-muted)]">Last updated: just now</div>
       </div>
 
       {error && (
@@ -64,8 +64,8 @@ const DashboardPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="og-card og-kpi">
           <div>
-            <p className="text-sm text-white/70">Total Users</p>
-            <p className="text-2xl font-bold mt-2">{stats.userCount}</p>
+            <p className="text-sm text-[var(--text-muted)]">Total Users</p>
+            <p className="text-2xl font-bold mt-2 text-[var(--text)]">{stats.userCount}</p>
           </div>
           <div className="icon bg-gradient-to-br from-cyan-600 to-cyan-400 text-white">
             <FiUsers size={22} />
@@ -74,8 +74,8 @@ const DashboardPage = () => {
 
         <div className="og-card og-kpi">
           <div>
-            <p className="text-sm text-white/70">Total Roles</p>
-            <p className="text-2xl font-bold mt-2">{stats.roleCount}</p>
+            <p className="text-sm text-[var(--text-muted)]">Total Roles</p>
+            <p className="text-2xl font-bold mt-2 text-[var(--text)]">{stats.roleCount}</p>
           </div>
           <div className="icon bg-gradient-to-br from-yellow-500 to-orange-400 text-white">
             <FiShield size={22} />
@@ -84,8 +84,8 @@ const DashboardPage = () => {
 
         <div className="og-card og-kpi">
           <div>
-            <p className="text-sm text-white/70">Total Permissions</p>
-            <p className="text-2xl font-bold mt-2">{stats.permissionCount}</p>
+            <p className="text-sm text-[var(--text-muted)]">Total Permissions</p>
+            <p className="text-2xl font-bold mt-2 text-[var(--text)]">{stats.permissionCount}</p>
           </div>
           <div className="icon bg-gradient-to-br from-green-500 to-emerald-400 text-white">
             <FiKey size={22} />
@@ -94,11 +94,11 @@ const DashboardPage = () => {
       </div>
 
       <div className="og-card">
-        <h2 className="text-lg font-semibold mb-3">Quick Info</h2>
-        <p className="text-white/70 mb-4">
+        <h2 className="text-lg font-semibold mb-3 text-[var(--text)]">Quick Info</h2>
+        <p className="text-[var(--text-muted)] mb-4">
           Manage users, roles, and permissions from the navigation menu on the left.
         </p>
-        <ul className="space-y-2 text-white/60">
+        <ul className="space-y-2 text-[var(--text-muted)]">
           <li>• <strong>Users:</strong> Create, read, update, and delete user accounts</li>
           <li>• <strong>Roles:</strong> Manage role hierarchies and assign permissions</li>
           <li>• <strong>Permissions:</strong> Define system permissions and categories</li>

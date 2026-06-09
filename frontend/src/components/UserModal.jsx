@@ -55,26 +55,26 @@ const UserModal = ({ user, roles, onSave, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-800">
+    <div className="fixed inset-0 og-modal-backdrop flex items-start justify-center p-4 z-50 overflow-y-auto sm:items-center">
+      <div className="og-modal bg-[var(--card-bg)] text-[var(--text)] shadow-xl w-full max-w-md max-h-[calc(100vh-4rem)] overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-[var(--border)]">
+          <h2 className="text-xl font-bold text-[var(--text)]">
             {user ? 'Edit User' : 'Add User'}
           </h2>
-          <button onClick={onClose} className="text-gray-600 hover:text-gray-800">
+          <button onClick={onClose} className="text-[var(--text-muted)] hover:text-[var(--text)]">
             <FiX size={24} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="max-h-[calc(100vh-8rem)] overflow-y-auto p-6 space-y-4">
           {error && (
-            <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
+            <div className="og-alert og-alert-error">
               {error}
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium og-form-label mb-1">
               Username
             </label>
             <input
@@ -83,13 +83,13 @@ const UserModal = ({ user, roles, onSave, onClose }) => {
               value={formData.username}
               onChange={handleChange}
               disabled={!!user}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              className="og-form-control disabled:bg-[var(--surface)]"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium og-form-label mb-1">
               Email
             </label>
             <input
@@ -97,14 +97,14 @@ const UserModal = ({ user, roles, onSave, onClose }) => {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="og-form-control"
               required
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium og-form-label mb-1">
                 First Name
               </label>
               <input
@@ -112,12 +112,12 @@ const UserModal = ({ user, roles, onSave, onClose }) => {
                 name="firstName"
                 value={formData.firstName}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="og-form-control"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium og-form-label mb-1">
                 Last Name
               </label>
               <input
@@ -125,21 +125,21 @@ const UserModal = ({ user, roles, onSave, onClose }) => {
                 name="lastName"
                 value={formData.lastName}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="og-form-control"
                 required
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium og-form-label mb-1">
               Role
             </label>
             <select
               name="roleId"
               value={formData.roleId}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="og-form-control og-form-select"
               required
             >
               <option value="">Select a role</option>
@@ -158,9 +158,9 @@ const UserModal = ({ user, roles, onSave, onClose }) => {
               id="active"
               checked={formData.active}
               onChange={handleChange}
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+              className="h-4 w-4 rounded border-[var(--border)] bg-[var(--input-bg)] text-[var(--accent)] focus:ring-[var(--accent)]"
             />
-            <label htmlFor="active" className="ml-2 text-sm text-gray-700">
+            <label htmlFor="active" className="ml-2 text-sm og-form-label">
               Active
             </label>
           </div>
@@ -169,14 +169,14 @@ const UserModal = ({ user, roles, onSave, onClose }) => {
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded-lg transition"
+              className="og-btn og-btn-primary flex-1"
             >
               {loading ? 'Saving...' : 'Save'}
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition"
+              className="og-btn og-btn-ghost flex-1"
             >
               Cancel
             </button>

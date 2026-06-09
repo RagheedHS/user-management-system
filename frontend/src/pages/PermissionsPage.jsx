@@ -70,8 +70,8 @@ const PermissionsPage = () => {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
-          <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-blue-500 border-r-transparent"></div>
-          <p className="mt-4 text-gray-600">Loading permissions...</p>
+          <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-[var(--accent)] border-r-transparent"></div>
+          <p className="mt-4 text-[var(--text-muted)]">Loading permissions...</p>
         </div>
       </div>
     );
@@ -79,41 +79,41 @@ const PermissionsPage = () => {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Permissions Management</h1>
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
+        <h1 className="text-3xl font-bold text-[var(--text)]">Permissions Management</h1>
         <button
           onClick={handleAdd}
-          className="flex items-center space-x-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg"
+          className="flex items-center space-x-2 rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--button-text)] shadow-md shadow-[var(--accent)]/20 transition hover:brightness-105"
         >
           <FiPlus /> <span>Add Permission</span>
         </button>
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-start">
+        <div className="mb-6 rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-red-600 flex items-start">
           <FiAlertCircle className="mr-3 mt-0.5 flex-shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <div className="rounded-3xl border border-[var(--border)] bg-[var(--card-bg)] shadow-[0_20px_60px_rgba(15,23,42,0.08)] overflow-hidden">
         <table className="w-full">
-          <thead className="bg-gray-100 border-b border-gray-200">
+          <thead className="border-b border-[var(--border)] bg-[var(--surface)]">
             <tr>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Permission Name</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Description</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Category</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-[var(--text-muted)]">Permission Name</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-[var(--text-muted)]">Description</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-[var(--text-muted)]">Category</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-[var(--text-muted)]">Status</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-[var(--text-muted)]">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody>
             {permissions.map((permission) => (
-              <tr key={permission.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 text-sm font-semibold text-gray-900">{permission.name}</td>
-                <td className="px-6 py-4 text-sm text-gray-900">{permission.description}</td>
-                <td className="px-6 py-4 text-sm text-gray-900">
-                  <span className="bg-gray-200 text-gray-800 px-3 py-1 rounded-full text-xs font-semibold">
+              <tr key={permission.id} className="transition-colors hover:bg-[var(--surface)]">
+                <td className="px-6 py-4 text-sm font-semibold text-[var(--text)]">{permission.name}</td>
+                <td className="px-6 py-4 text-sm text-[var(--text)]">{permission.description}</td>
+                <td className="px-6 py-4 text-sm text-[var(--text)]">
+                  <span className="rounded-full bg-[var(--surface)] px-3 py-1 text-xs font-semibold text-[var(--text-muted)]">
                     {permission.category}
                   </span>
                 </td>
@@ -128,16 +128,16 @@ const PermissionsPage = () => {
                     {permission.active ? 'Active' : 'Inactive'}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-sm space-x-2 flex">
+                <td className="px-6 py-4 text-sm flex items-center gap-3">
                   <button
                     onClick={() => handleEdit(permission)}
-                    className="text-blue-600 hover:text-blue-800 font-semibold"
+                    className="text-[var(--accent)] hover:text-[var(--accent-2)] font-semibold"
                   >
                     <FiEdit />
                   </button>
                   <button
                     onClick={() => handleDelete(permission.id)}
-                    className="text-red-600 hover:text-red-800 font-semibold"
+                    className="text-red-500 hover:text-red-700 font-semibold"
                   >
                     <FiTrash2 />
                   </button>
@@ -147,7 +147,7 @@ const PermissionsPage = () => {
           </tbody>
         </table>
         {permissions.length === 0 && (
-          <div className="text-center py-8 text-gray-600">
+          <div className="text-center py-8 text-[var(--text-muted)]">
             No permissions found. Click "Add Permission" to create one.
           </div>
         )}
