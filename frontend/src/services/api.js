@@ -67,6 +67,13 @@ export const userAPI = {
     }),
 };
 
+// Notification API
+export const notificationAPI = {
+  list: () => api.get('/notifications'),
+  unreadCount: () => api.get('/notifications/unread-count'),
+  markRead: (id) => api.post(`/notifications/${id}/read`),
+};
+
 // Role API
 export const roleAPI = {
   getAll: () => api.get('/roles'),

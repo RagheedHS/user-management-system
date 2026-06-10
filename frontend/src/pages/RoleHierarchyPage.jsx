@@ -96,18 +96,30 @@ const RoleHierarchyPage = () => {
     setDetailsRole(null);
   };
 
-  if (loading) return <div className="p-6">Loading hierarchy...</div>;
+  if (loading) return (
+    <div className="flex items-center justify-center h-full">
+      <div className="text-center">
+        <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-[var(--accent)] border-r-transparent"></div>
+        <p className="mt-4 text-[var(--text-muted)]">Loading hierarchy...</p>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4 text-[var(--text)]">Role Hierarchy</h1>
+    <div>
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
+        <h1 className="text-3xl font-bold text-[var(--text)]">Role Hierarchy</h1>
+      </div>
+
       {error && <div className="mb-4 rounded-lg border border-red-600/20 bg-red-600/10 p-3 text-red-600">{error}</div>}
 
-      <div className="rounded-3xl border border-[var(--border)] bg-[var(--card-bg)] p-4 shadow-[0_20px_50px_rgba(15,23,42,0.08)]">
-        {tree.length === 0 && <div className="text-[var(--text-muted)]">No roles present.</div>}
-        {tree.map((root) => (
-          <RoleNode key={root.id} node={root} onView={handleView} onSetParent={handleSetParent} />
-        ))}
+      <div className="og-card">
+        {tree.length === 0 && <div className="text-[var(--text-muted)] p-4">No roles present.</div>}
+        <div className="space-y-3 p-2">
+          {tree.map((root) => (
+            <RoleNode key={root.id} node={root} onView={handleView} onSetParent={handleSetParent} />
+          ))}
+        </div>
       </div>
 
       {detailsRole && (

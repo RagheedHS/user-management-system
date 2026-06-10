@@ -20,6 +20,7 @@ public class UserDTO {
     private Boolean active;
     private Long roleId;
     private String roleName;
+    private String profilePhoto;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

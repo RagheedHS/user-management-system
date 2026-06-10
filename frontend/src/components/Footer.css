@@ -1,0 +1,4 @@
+.og-footer { background: transparent; position: sticky; bottom: 0; width: 100%; z-index: 20; border-radius: 0; }
+.og-footer ul { list-style: none; padding:0; margin:0 }
+.og-footer h3, .og-footer h4 { color: var(--text-strong) }
+.og-footer li { color: var(--text-muted) }

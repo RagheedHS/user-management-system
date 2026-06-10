@@ -1,0 +1,33 @@
+.og-toast-container {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 9999;
+}
+.og-toast-center-container {
+  position: fixed;
+  top: 36px; /* slightly lower than top */
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 10000;
+  pointer-events: none;
+}
+.og-toast {
+  min-width: 200px;
+  max-width: 520px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  color: white;
+  font-weight: 700;
+  box-shadow: 0 6px 20px rgba(2,6,23,0.2);
+  pointer-events: auto;
+}
+.og-toast-info { background: linear-gradient(90deg,#3b82f6,#06b6d4); }
+.og-toast-success { background: linear-gradient(90deg,#10b981,#06b6d4); }
+.og-toast-error { background: linear-gradient(90deg,#ef4444,#f97316); }

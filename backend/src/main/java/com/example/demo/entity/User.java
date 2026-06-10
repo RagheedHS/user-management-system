@@ -31,6 +31,9 @@ public class User {
     @Column(nullable = false)
     private String lastName;
 
+    @Column(name = "profile_photo", columnDefinition = "TEXT")
+    private String profilePhoto;
+
     @Column(nullable = false)
     private Boolean active = true;
 

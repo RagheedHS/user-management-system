@@ -10,6 +10,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +22,12 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     public UserDTO createUser(UserDTO dto, Long roleId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = auth != null && auth.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+        if (!isAdmin) {
+            throw new AccessDeniedException("Not authorized to create users");
+        }
+
         if (userRepository.existsByUsername(dto.getUsername())) {
             throw new IllegalArgumentException("Username already exists");
         }
@@ -32,6 +41,7 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(dto.getFirstName())); // Temporary password - should be changed
         user.setFirstName(dto.getFirstName());
         user.setLastName(dto.getLastName());
+        if (dto.getProfilePhoto() != null) user.setProfilePhoto(dto.getProfilePhoto());
         user.setActive(true);
 
         Role role = roleRepository.findById(roleId)
@@ -68,11 +78,31 @@ public class UserService {
     public UserDTO updateUser(Long id, UserDTO dto, Long roleId) {
         User user = userRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
-        
-        user.setEmail(dto.getEmail());
-        user.setFirstName(dto.getFirstName());
-        user.setLastName(dto.getLastName());
-        user.setActive(dto.getActive());
+        // security: only admins can change role or active flag; users can update their own profile fields
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = auth != null && auth.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+        String authName = auth != null ? auth.getName() : null;
+
+        if (!isAdmin) {
+            // non-admins cannot change role or active status
+            if (roleId != null) {
+                throw new AccessDeniedException("Not authorized to change role");
+            }
+            if (dto.getActive() != null) {
+                throw new AccessDeniedException("Not authorized to change active status");
+            }
+            // non-admins can only update their own profile
+            if (!user.getUsername().equals(authName)) {
+                throw new AccessDeniedException("Not authorized to update this user");
+            }
+        }
+
+        // only update fields that are present in the DTO (allow partial updates)
+        if (dto.getEmail() != null) user.setEmail(dto.getEmail());
+        if (dto.getFirstName() != null) user.setFirstName(dto.getFirstName());
+        if (dto.getLastName() != null) user.setLastName(dto.getLastName());
+        if (dto.getProfilePhoto() != null) user.setProfilePhoto(dto.getProfilePhoto());
+        if (dto.getActive() != null) user.setActive(dto.getActive());
 
         if (roleId != null) {
             Role role = roleRepository.findById(roleId)
@@ -84,6 +114,12 @@ public class UserService {
     }
 
     public void deleteUser(Long id) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = auth != null && auth.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+        if (!isAdmin) {
+            throw new AccessDeniedException("Not authorized to delete users");
+        }
+
         if (!userRepository.existsById(id)) {
             throw new RuntimeException("User not found with id: " + id);
         }
@@ -93,11 +129,20 @@ public class UserService {
     public void changePassword(Long id, String oldPassword, String newPassword) {
         User user = userRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
-        
-        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
-            throw new IllegalArgumentException("Old password is incorrect");
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = auth != null && auth.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+        String authName = auth != null ? auth.getName() : null;
+
+        if (!isAdmin && !user.getUsername().equals(authName)) {
+            throw new AccessDeniedException("Not authorized to change password for this user");
         }
-        
+
+        if (!isAdmin) {
+            if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+                throw new IllegalArgumentException("Old password is incorrect");
+            }
+        }
+
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
     }
@@ -105,7 +150,12 @@ public class UserService {
     public void resetPassword(Long id, String newPassword) {
         User user = userRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
-        
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = auth != null && auth.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+        if (!isAdmin) {
+            throw new AccessDeniedException("Not authorized to reset passwords");
+        }
+
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
     }
@@ -118,6 +168,7 @@ public class UserService {
         dto.setFirstName(user.getFirstName());
         dto.setLastName(user.getLastName());
         dto.setActive(user.getActive());
+        dto.setProfilePhoto(user.getProfilePhoto());
         if (user.getRole() != null) {
             dto.setRoleId(user.getRole().getId());
             dto.setRoleName(user.getRole().getName());

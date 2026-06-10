@@ -1,0 +1,59 @@
+.og-navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 20px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.02), transparent);
+  border-bottom: 1px solid var(--border);
+}
+
+.og-navbar-left { display:flex; align-items:center; gap:18px }
+.og-brand { display:flex; align-items:center; gap:10px; text-decoration:none }
+.og-brand-logo { width:36px; height:36px; object-fit:contain; border-radius:8px }
+.og-brand-text { color:var(--text-strong); font-weight:700; letter-spacing:0.2px }
+
+.og-nav-links { list-style:none; display:flex; gap:12px; margin:0; padding:0 }
+.og-nav-links a { color:var(--text-muted); text-decoration:none; font-weight:600; padding:8px 10px; border-radius:8px }
+.og-nav-links a:hover, .og-nav-links a.active { color:var(--text-strong); background: rgba(255,255,255,0.02) }
+
+.og-navbar-right { display:flex; align-items:center; gap:12px }
+.og-theme-toggle { background:transparent; border:1px solid var(--border); color:var(--text); padding:8px; border-radius:8px; display:inline-flex; align-items:center }
+
+.og-profile-actions { display:flex; align-items:center; gap:10px }
+.og-avatar { width:44px; height:44px; border-radius:999px; overflow:hidden; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg, rgba(14,165,233,0.12), rgba(255,176,32,0.05)); border:1px solid var(--border); cursor:pointer }
+.og-avatar img { width:100%; height:100%; object-fit:cover }
+.og-avatar-initials { font-weight:700; color:var(--text-strong) }
+.og-logout { padding:8px 12px; border-radius:8px; background:transparent; border:1px solid var(--border); color:var(--text); cursor:pointer }
+
+.og-auth-actions .og-login { padding:8px 12px; border-radius:8px; background:var(--button-bg); color:var(--button-text); border:none; cursor:pointer }
+
+/* Burger button */
+.og-burger { background:transparent; border:none; color:var(--text); padding:8px; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center }
+
+/* Notification */
+.og-bell { position:relative; background:transparent; border:none; color:var(--text); padding:8px; border-radius:8px; cursor:pointer }
+.og-badge { position:absolute; top:4px; right:4px; background:var(--danger); color:white; font-size:10px; padding:2px 6px; border-radius:999px }
+.og-notif-dropdown { position:absolute; right:8px; top:48px; background:var(--card-bg); border:1px solid rgba(6,182,212,0.06); border-radius:10px; width:360px; box-shadow: 0 16px 40px rgba(2,6,23,0.65); z-index:40; overflow:hidden }
+.og-notif-item { padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.02); color:var(--text); font-size:13px }
+ .og-notif-list { display:flex; flex-direction:column; gap:8px; max-height:360px; overflow:auto; padding:6px }
+.og-notif-item.unread { border-left: 4px solid #06b6d4; padding-left:8px }
+.og-notif-item.read { opacity: 0.6 }
+.og-notif-actions { margin-top:6px }
+.og-link { background:none; border:0; color: #06b6d4; cursor:pointer; font-weight:600 }
+.og-notif-empty { padding:12px; color:var(--text-muted) }
+
+/* Settings dropdown */
+.og-settings { background:transparent; border:none; padding:8px; border-radius:8px; cursor:pointer }
+.og-settings-dropdown { position:absolute; right:8px; top:48px; background:var(--card-bg); border:1px solid var(--border); border-radius:8px; width:220px; box-shadow:var(--card-shadow); z-index:40; padding:8px }
+.og-settings-row { display:flex; align-items:center; gap:8px; padding:6px 4px; color:var(--text); font-size:13px }
+
+/* Hide top nav links on large screens to avoid duplication with sidebar */
+@media (min-width: 1024px) {
+  .og-nav-links { display:none }
+}
+
+/* Compact brand text on very small screens */
+@media (max-width: 640px) {
+  .og-brand-text { display:none }
+}

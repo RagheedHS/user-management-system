@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FiEdit, FiTrash2, FiPlus, FiAlertCircle } from 'react-icons/fi';
 import { userAPI, roleAPI } from '../services/api';
 import UserModal from '../components/UserModal';
+import { useAuth } from '../context/AuthContext';
 
 const UsersPage = () => {
   const [users, setUsers] = useState([]);
@@ -10,6 +11,7 @@ const UsersPage = () => {
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const { user: authUser } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -82,12 +84,14 @@ const UsersPage = () => {
     <div>
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
         <h1 className="text-3xl font-bold text-[var(--text)]">Users Management</h1>
-        <button
-          onClick={handleAdd}
-          className="flex items-center space-x-2 rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--button-text)] shadow-md shadow-[var(--accent)]/20 transition hover:brightness-105"
-        >
-          <FiPlus /> <span>Add User</span>
-        </button>
+        {authUser?.roleName === 'ADMIN' && (
+          <button
+            onClick={handleAdd}
+            className="flex items-center space-x-2 rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--button-text)] shadow-md shadow-[var(--accent)]/20 transition hover:brightness-105"
+          >
+            <FiPlus /> <span>Add User</span>
+          </button>
+        )}
       </div>
 
       {error && (
@@ -129,19 +133,25 @@ const UsersPage = () => {
                     {user.active ? 'Active' : 'Inactive'}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-sm flex items-center gap-3">
-                  <button
-                    onClick={() => handleEdit(user)}
-                    className="text-[var(--accent)] hover:text-[var(--accent-2)] font-semibold"
-                  >
-                    <FiEdit />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(user.id)}
-                    className="text-red-500 hover:text-red-700 font-semibold"
-                  >
-                    <FiTrash2 />
-                  </button>
+                  <td className="px-6 py-4 text-sm flex items-center gap-3">
+                  {authUser?.roleName === 'ADMIN' ? (
+                    <>
+                      <button
+                        onClick={() => handleEdit(user)}
+                        className="text-[var(--accent)] hover:text-[var(--accent-2)] font-semibold"
+                      >
+                        <FiEdit />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(user.id)}
+                        className="text-red-500 hover:text-red-700 font-semibold"
+                      >
+                        <FiTrash2 />
+                      </button>
+                    </>
+                  ) : (
+                    <span className="text-sm text-[var(--text-muted)]">—</span>
+                  )}
                 </td>
               </tr>
             ))}

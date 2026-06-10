@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { ToastProvider } from './context/ToastContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import DashboardLayout from './components/DashboardLayout';
 import LoginPage from './pages/LoginPage';
@@ -14,9 +15,10 @@ import './App.css';
 
 function App() {
   return (
-    <ThemeProvider>
-      <Router>
-        <AuthProvider>
+    <ToastProvider>
+      <ThemeProvider>
+        <Router>
+          <AuthProvider>
           <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<LoginPage />} />
@@ -79,9 +81,10 @@ function App() {
           {/* 404 Not Found */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
-      </AuthProvider>
-    </Router>
-  </ThemeProvider>
+          </AuthProvider>
+        </Router>
+      </ThemeProvider>
+    </ToastProvider>
   );
 }
 

@@ -41,8 +41,8 @@ const RoleDetailsModal = ({ roleId, roles, onClose, onUpdated }) => {
     <div className="fixed inset-0 og-modal-backdrop flex items-start justify-center p-4 z-50 overflow-y-auto bg-black/40 sm:items-center" onClick={onClose}>
       <div className="og-modal bg-[var(--card-bg)] w-full max-w-3xl max-h-[calc(100vh-4rem)] overflow-hidden rounded-3xl" onClick={(e) => e.stopPropagation()}>
         <div className="og-modal-header flex items-center justify-between px-6 py-5 border-b border-[var(--border)]">
-          <h3 className="text-lg font-bold text-[var(--text)]">Role: {role.name}</h3>
-          <button onClick={onClose} className="text-[var(--text-muted)] hover:text-[var(--text)]"><FiX /></button>
+          <h2 className="text-xl font-bold text-[var(--text)]">Role: {role.name}</h2>
+          <button onClick={onClose} className="text-[var(--text-muted)] hover:text-[var(--text)]"><FiX size={24} /></button>
         </div>
 
         <div className="max-h-[calc(100vh-8rem)] overflow-y-auto px-6 py-5 space-y-4">
@@ -59,9 +59,8 @@ const RoleDetailsModal = ({ roleId, roles, onClose, onUpdated }) => {
                 <option key={r.id} value={r.id}>{r.name} (Level {r.roleLevel})</option>
               ))}
             </select>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <button onClick={handleSaveParent} disabled={saving} className="og-btn og-btn-primary">{saving ? 'Saving...' : 'Save Parent'}</button>
-              <button onClick={() => { setParentRoleId(''); }} className="og-btn og-btn-ghost">Clear</button>
+            <div className="mt-2">
+              <div className="text-sm text-[var(--text-muted)]">Select a parent role and click Save below</div>
             </div>
           </div>
 
@@ -95,8 +94,15 @@ const RoleDetailsModal = ({ roleId, roles, onClose, onUpdated }) => {
           </div>
         </div>
 
-        <div className="p-4 border-t border-[var(--border)] flex justify-end">
-          <button onClick={onClose} className="og-btn og-btn-ghost">Close</button>
+        <div className="p-4 border-t border-[var(--border)] flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <button onClick={() => { setParentRoleId(''); }} className="og-btn og-btn-ghost">Clear</button>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button onClick={onClose} className="og-btn og-btn-ghost">Close</button>
+            <button onClick={handleSaveParent} disabled={saving} className="og-btn og-btn-primary">{saving ? 'Saving...' : 'Save Parent'}</button>
+          </div>
         </div>
       </div>
     </div>

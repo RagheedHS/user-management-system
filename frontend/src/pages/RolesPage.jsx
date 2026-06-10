@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FiEdit, FiTrash2, FiPlus, FiAlertCircle } from 'react-icons/fi';
 import { roleAPI, permissionAPI } from '../services/api';
 import RoleModal from '../components/RoleModal';
+import { useAuth } from '../context/AuthContext';
 
 const RolesPage = () => {
   const [roles, setRoles] = useState([]);
@@ -10,6 +11,7 @@ const RolesPage = () => {
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [selectedRole, setSelectedRole] = useState(null);
+  const { user: authUser } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -83,12 +85,16 @@ const RolesPage = () => {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
         <h1 className="text-3xl font-bold text-[var(--text)]">Roles Management</h1>
         <div className="flex flex-wrap items-center gap-3">
-          <button onClick={handleAdd} className="og-btn og-btn-primary flex items-center space-x-2">
-            <FiPlus /> <span>Add Role</span>
-          </button>
-          <a href="/roles/hierarchy" className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm text-[var(--text)] transition hover:bg-[var(--panel)]">
-            View Hierarchy
-          </a>
+          {authUser?.roleName === 'ADMIN' && (
+            <button onClick={handleAdd} className="og-btn og-btn-primary flex items-center space-x-2">
+              <FiPlus /> <span>Add Role</span>
+            </button>
+          )}
+          {authUser?.roleName === 'ADMIN' && (
+            <a href="/roles/hierarchy" className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm text-[var(--text)] transition hover:bg-[var(--panel)]">
+              View Hierarchy
+            </a>
+          )}
         </div>
       </div>
 
@@ -125,12 +131,18 @@ const RolesPage = () => {
                 </td>
                 <td>
                   <div className="flex flex-wrap items-center gap-2">
-                    <button onClick={() => handleEdit(role)} className="og-btn og-btn-ghost flex items-center gap-2">
-                      <FiEdit /> <span className="text-sm">Edit</span>
-                    </button>
-                    <button onClick={() => handleDelete(role.id)} className="og-btn og-btn-ghost text-red-400">
-                      <FiTrash2 />
-                    </button>
+                    {authUser?.roleName === 'ADMIN' ? (
+                      <>
+                        <button onClick={() => handleEdit(role)} className="og-btn og-btn-ghost flex items-center gap-2">
+                          <FiEdit /> <span className="text-sm">Edit</span>
+                        </button>
+                        <button onClick={() => handleDelete(role.id)} className="og-btn og-btn-ghost text-red-400">
+                          <FiTrash2 />
+                        </button>
+                      </>
+                    ) : (
+                      <span className="text-sm text-[var(--text-muted)]">—</span>
+                    )}
                   </div>
                 </td>
               </tr>

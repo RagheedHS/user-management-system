@@ -6,6 +6,7 @@ import com.example.demo.dto.RoleHierarchyDTO;
 import com.example.demo.dto.UpdateRoleRequest;
 import com.example.demo.service.RoleService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -51,12 +52,14 @@ public class RoleController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RoleDTO> createRole(@Valid @RequestBody CreateRoleRequest roleRequest,
                                               Principal principal) {
         RoleDTO createdRole = roleService.createRole(roleRequest, principal.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(createdRole);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<RoleDTO> updateRole(@PathVariable Long id,
                                               @Valid @RequestBody UpdateRoleRequest roleRequest,
@@ -65,12 +68,14 @@ public class RoleController {
         return ResponseEntity.ok(updatedRole);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRole(@PathVariable Long id, Principal principal) {
         roleService.deleteRole(id, principal != null ? principal.getName() : "SYSTEM");
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{roleId}/permissions/{permissionId}")
     public ResponseEntity<RoleDTO> addPermissionToRole(@PathVariable Long roleId,
                                                        @PathVariable Long permissionId,
@@ -80,6 +85,7 @@ public class RoleController {
         return ResponseEntity.ok(role);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{roleId}/permissions/{permissionId}")
     public ResponseEntity<RoleDTO> removePermissionFromRole(@PathVariable Long roleId,
                                                             @PathVariable Long permissionId,
@@ -94,6 +100,7 @@ public class RoleController {
         return ResponseEntity.ok(roleService.getHierarchy());
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/parent")
     public ResponseEntity<RoleDTO> updateParentRole(@PathVariable Long id,
                                                     @RequestParam(required = false) Long parentRoleId,

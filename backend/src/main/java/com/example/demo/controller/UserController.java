@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.dto.UserDTO;
 import com.example.demo.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -39,6 +40,7 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO userDTO,
                                               @RequestParam Long roleId) {
@@ -54,6 +56,7 @@ public class UserController {
         return ResponseEntity.ok(updatedUser);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
@@ -68,6 +71,7 @@ public class UserController {
         return ResponseEntity.ok("Password changed successfully");
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{id}/reset-password")
     public ResponseEntity<String> resetPassword(@PathVariable Long id,
                                                 @RequestParam String newPassword) {
