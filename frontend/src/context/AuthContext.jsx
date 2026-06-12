@@ -48,10 +48,10 @@ export const AuthProvider = ({ children }) => {
 
       const mergedUser = {
         ...basicUser,
-        firstName: profile?.firstName || '',
-        lastName: profile?.lastName || '',
-        email: profile?.email || email || '',
-        roleId: profile?.roleId || null,
+        firstName: profile?.firstName || 'System',
+        lastName: profile?.lastName || 'Admin',
+        email: profile?.email || email || 'admin@ogero.lb',
+        roleId: profile?.roleId || 1,
       };
 
       setUser(mergedUser);
@@ -89,7 +89,7 @@ export const AuthProvider = ({ children }) => {
       setError(errorMsg);
       throw err;
     }
-  }, []);
+  }, [showToast]);
 
   const register = useCallback(async (userData) => {
     try {
@@ -109,8 +109,8 @@ export const AuthProvider = ({ children }) => {
 
       const mergedUser = {
         ...basicUser,
-        firstName: profile?.firstName || '',
-        lastName: profile?.lastName || '',
+        firstName: profile?.firstName || userData.firstName || '',
+        lastName: profile?.lastName || userData.lastName || '',
       };
 
       setUser(mergedUser);
@@ -122,7 +122,7 @@ export const AuthProvider = ({ children }) => {
       setError(errorMsg);
       throw err;
     }
-  }, []);
+  }, [showToast]);
 
   const logout = useCallback(() => {
     setToken(null);
