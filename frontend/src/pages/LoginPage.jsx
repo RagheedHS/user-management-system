@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FiUser, FiLock, FiAlertCircle, FiArrowRight } from 'react-icons/fi';
+import { FiUser, FiLock, FiAlertCircle, FiArrowRight, FiEye, FiEyeOff } from 'react-icons/fi';
 import AuthLayout from '../components/Authlayout.jsx';
 
 const LoginPage = () => {
@@ -10,11 +10,10 @@ const LoginPage = () => {
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [localError, setLocalError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard');
-    }
+    if (isAuthenticated) navigate('/dashboard');
   }, [isAuthenticated, navigate]);
 
   const handleChange = (e) => {
@@ -27,7 +26,6 @@ const LoginPage = () => {
     e.preventDefault();
     setLocalError('');
     setLoading(true);
-
     try {
       await login(formData.username, formData.password);
       navigate('/dashboard');
@@ -83,15 +81,24 @@ const LoginPage = () => {
             <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--accent)]" size={16} />
             <input
               id="password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               name="password"
               autoComplete="current-password"
               value={formData.password}
               onChange={handleChange}
               placeholder="••••••••"
-              className="og-form-control pl-11"
+              className="og-form-control pl-11 pr-11"
               required
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword((p) => !p)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--accent)] hover:opacity-70 transition"
+              tabIndex={-1}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+            </button>
           </div>
         </div>
 
@@ -99,23 +106,16 @@ const LoginPage = () => {
           type="submit"
           disabled={!isFormValid || loading}
           className={`og-btn og-btn-primary og-font-mono w-full mt-2 py-3.5 text-xs uppercase tracking-[0.25em] flex items-center justify-center gap-2 shadow-lg transition-all duration-300
-            ${isFormValid && !loading
-              ? 'opacity-100 cursor-pointer hover:brightness-110 active:scale-[0.99]'
-              : 'opacity-50 cursor-not-allowed'
-            }`}
+            ${isFormValid && !loading ? 'opacity-100 cursor-pointer hover:brightness-110 active:scale-[0.99]' : 'opacity-50 cursor-not-allowed'}`}
         >
-          {loading ? 'Authenticating…' : 'Sign in'}
+          {loading ? 'Authenticating...' : 'Sign in'}
           {!loading && <FiArrowRight size={14} />}
         </button>
       </form>
 
       <div className="flex justify-between items-center gap-2 mt-8 pt-6 border-t border-[var(--border)] og-font-mono text-[11px] uppercase tracking-[0.15em] text-[var(--text-muted)]">
-        <Link to="/forgot-password" className="hover:text-[var(--accent)] transition">
-          Forgot password
-        </Link>
-        <Link to="/register" className="hover:text-[var(--accent)] transition">
-          Request access
-        </Link>
+        <Link to="/forgot-password" className="hover:text-[var(--accent)] transition">Forgot password</Link>
+        <Link to="/register" className="hover:text-[var(--accent)] transition">Request access</Link>
       </div>
     </AuthLayout>
   );
