@@ -1,0 +1,10 @@
+backend/target/
+backend/oracleJdk-26/
+*.class
+*.jar
+frontend/node_modules/
+.vscode/
+.idea/
+*.iml
+Thumbs.db
+.DS_Store

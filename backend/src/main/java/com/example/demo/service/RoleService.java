@@ -30,6 +30,7 @@ public class RoleService {
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
     private final AuditLogService auditLogService;
+    private final com.example.demo.repository.UserRepository userRepository;
 
     public RoleDTO createRole(CreateRoleRequest request, String username) {
         if (roleRepository.findByName(request.getName()).isPresent()) {
@@ -122,10 +123,18 @@ public class RoleService {
     }
 
     public void deleteRole(Long id, String username) {
-        Role role = getRole(id);
-        roleRepository.delete(role);
-        auditLogService.log(username, "ROLE_DELETED", "Role", id, "Deleted role " + role.getName());
+    Role role = getRole(id);
+    
+    long usersWithRole = userRepository.countByRoleId(id);
+    if (usersWithRole > 0) {
+        throw new IllegalArgumentException(
+            "Cannot delete role '" + role.getName() + "' because it is assigned to " + usersWithRole + " user(s). Please reassign them first."
+        );
     }
+
+    roleRepository.delete(role);
+    auditLogService.log(username, "ROLE_DELETED", "Role", id, "Deleted role " + role.getName());
+}
 
     public RoleDTO addPermissionToRole(Long roleId, Long permissionId, String username) {
         Role role = getRole(roleId);

@@ -14,4 +14,5 @@ public interface UserRepository extends JpaRepository<User, Long>, org.springfra
     List<User> findByActiveTrue();
     Boolean existsByUsername(String username);
     Boolean existsByEmail(String email);
+    long countByRoleId(Long roleId);
 }
