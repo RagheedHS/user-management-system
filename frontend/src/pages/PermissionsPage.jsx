@@ -3,6 +3,12 @@ import { FiEdit, FiTrash2, FiPlus, FiAlertCircle } from 'react-icons/fi';
 import { permissionAPI } from '../services/api';
 import PermissionModal from '../components/PermissionModal';
 
+// Custom CSS for action buttons
+const actionButtonStyles = {
+  edit: 'w-9 h-9 flex items-center justify-center border-2 border-[var(--accent)] text-[var(--accent)] rounded-lg hover:bg-[var(--accent)]/10 transition-all',
+  delete: 'w-9 h-9 flex items-center justify-center border-2 border-red-500 text-red-500 rounded-lg hover:bg-red-500/10 transition-all'
+};
+
 const PermissionsPage = () => {
   const [permissions, setPermissions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -83,7 +89,7 @@ const PermissionsPage = () => {
         <h1 className="text-3xl font-bold text-[var(--text)]">Permissions Management</h1>
         <button
           onClick={handleAdd}
-          className="flex items-center space-x-2 rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--button-text)] shadow-md shadow-[var(--accent)]/20 transition hover:brightness-105"
+          className="og-btn og-btn-primary flex items-center space-x-2"
         >
           <FiPlus /> <span>Add Permission</span>
         </button>
@@ -113,16 +119,16 @@ const PermissionsPage = () => {
                 <td className="px-6 py-4 text-sm font-semibold text-[var(--text)]">{permission.name}</td>
                 <td className="px-6 py-4 text-sm text-[var(--text)]">{permission.description}</td>
                 <td className="px-6 py-4 text-sm text-[var(--text)]">
-                  <span className="rounded-full bg-[var(--surface)] px-3 py-1 text-xs font-semibold text-[var(--text-muted)]">
+                  <span className="rounded-lg bg-[var(--surface)] px-3 py-1 text-xs font-semibold text-[var(--text-muted)]">
                     {permission.category}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-sm">
                   <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                    className={`px-3 py-1 rounded-lg text-xs font-semibold ${
                       permission.active
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
+                        ? 'bg-green-500/20 text-green-400'
+                        : 'bg-red-500/20 text-red-400'
                     }`}
                   >
                     {permission.active ? 'Active' : 'Inactive'}
@@ -131,15 +137,17 @@ const PermissionsPage = () => {
                 <td className="px-6 py-4 text-sm flex items-center gap-3">
                   <button
                     onClick={() => handleEdit(permission)}
-                    className="text-[var(--accent)] hover:text-[var(--accent-2)] font-semibold"
+                    className={actionButtonStyles.edit}
+                    title="Edit permission"
                   >
-                    <FiEdit />
+                    <FiEdit size={18} />
                   </button>
                   <button
                     onClick={() => handleDelete(permission.id)}
-                    className="text-red-500 hover:text-red-700 font-semibold"
+                    className={actionButtonStyles.delete}
+                    title="Delete permission"
                   >
-                    <FiTrash2 />
+                    <FiTrash2 size={18} />
                   </button>
                 </td>
               </tr>

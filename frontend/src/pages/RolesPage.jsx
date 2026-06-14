@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { FiEdit, FiTrash2, FiPlus, FiAlertCircle } from 'react-icons/fi';
+import { FiEdit, FiTrash2, FiPlus, FiAlertCircle, FiEye } from 'react-icons/fi';
 import { roleAPI, permissionAPI } from '../services/api';
 import RoleModal from '../components/RoleModal';
 import { useAuth } from '../context/AuthContext';
+
+// Custom CSS for action buttons
+const actionButtonStyles = {
+  edit: 'w-9 h-9 flex items-center justify-center border-2 border-[var(--accent)] text-[var(--accent)] rounded-lg hover:bg-[var(--accent)]/10 transition-all',
+  delete: 'w-9 h-9 flex items-center justify-center border-2 border-red-500 text-red-500 rounded-lg hover:bg-red-500/10 transition-all'
+};
 
 const RolesPage = () => {
   const [roles, setRoles] = useState([]);
@@ -91,8 +97,8 @@ const RolesPage = () => {
             </button>
           )}
           {authUser?.roleName === 'ADMIN' && (
-            <a href="/roles/hierarchy" className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm text-[var(--text)] transition hover:bg-[var(--panel)]">
-              View Hierarchy
+            <a href="/roles/hierarchy" className="og-btn inline-flex items-center gap-2 border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] transition hover:bg-[var(--panel)]">
+              <FiEye /> <span>View Hierarchy</span>
             </a>
           )}
         </div>
@@ -130,14 +136,22 @@ const RolesPage = () => {
                   </span>
                 </td>
                 <td>
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex items-center gap-3">
                     {authUser?.roleName === 'ADMIN' ? (
                       <>
-                        <button onClick={() => handleEdit(role)} className="og-btn og-btn-ghost flex items-center gap-2">
-                          <FiEdit /> <span className="text-sm">Edit</span>
+                        <button
+                          onClick={() => handleEdit(role)}
+                          className={actionButtonStyles.edit}
+                          title="Edit role"
+                        >
+                          <FiEdit size={18} />
                         </button>
-                        <button onClick={() => handleDelete(role.id)} className="og-btn og-btn-ghost text-red-400">
-                          <FiTrash2 />
+                        <button
+                          onClick={() => handleDelete(role.id)}
+                          className={actionButtonStyles.delete}
+                          title="Delete role"
+                        >
+                          <FiTrash2 size={18} />
                         </button>
                       </>
                     ) : (

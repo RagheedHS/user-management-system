@@ -34,7 +34,19 @@
 /* Notification */
 .og-bell { position:relative; background:transparent; border:none; color:var(--text); padding:8px; border-radius:8px; cursor:pointer }
 .og-badge { position:absolute; top:4px; right:4px; background:var(--danger); color:white; font-size:10px; padding:2px 6px; border-radius:999px }
-.og-notif-dropdown { position:absolute; right:8px; top:48px; background:var(--card-bg); border:1px solid rgba(6,182,212,0.06); border-radius:10px; width:360px; box-shadow: 0 16px 40px rgba(2,6,23,0.65); z-index:40; overflow:hidden }
+.og-notif-dropdown { 
+  position:absolute; 
+  right:8px; 
+  top:48px; 
+  background:var(--card-bg); 
+  border:1px solid rgba(6,182,212,0.06); 
+  border-radius:10px; 
+  width:360px; 
+  box-shadow: 0 16px 40px rgba(2,6,23,0.65); 
+  z-index:40; 
+  overflow:hidden;
+  animation: slideDownFade 0.3s ease-out;
+}
 .og-notif-item { padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.02); color:var(--text); font-size:13px }
  .og-notif-list { display:flex; flex-direction:column; gap:8px; max-height:360px; overflow:auto; padding:6px }
 .og-notif-item.unread { border-left: 4px solid #06b6d4; padding-left:8px }
@@ -45,8 +57,31 @@
 
 /* Settings dropdown */
 .og-settings { background:transparent; border:none; padding:8px; border-radius:8px; cursor:pointer }
-.og-settings-dropdown { position:absolute; right:8px; top:48px; background:var(--card-bg); border:1px solid var(--border); border-radius:8px; width:220px; box-shadow:var(--card-shadow); z-index:40; padding:8px }
+.og-settings-dropdown { 
+  position:absolute; 
+  right:8px; 
+  top:48px; 
+  background:var(--card-bg); 
+  border:1px solid var(--border); 
+  border-radius:8px; 
+  width:220px; 
+  box-shadow:var(--card-shadow); 
+  z-index:40; 
+  padding:8px;
+  animation: slideDownFade 0.3s ease-out;
+}
 .og-settings-row { display:flex; align-items:center; gap:8px; padding:6px 4px; color:var(--text); font-size:13px }
+
+@keyframes slideDownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
 /* Hide top nav links on large screens to avoid duplication with sidebar */
 @media (min-width: 1024px) {

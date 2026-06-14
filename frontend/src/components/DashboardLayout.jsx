@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { FiLogOut, FiHome, FiUsers, FiKey, FiShield, FiSun, FiMoon, FiLayers } from 'react-icons/fi';
+import { FiLogOut, FiHome, FiUsers, FiKey, FiShield, FiSun, FiMoon, FiLayers, FiAlertCircle } from 'react-icons/fi';
 import Navbar from './Navbar';
 import logo from '../assets/Ogero.png';
 import Footer from './Footer';
@@ -11,10 +11,20 @@ const DashboardLayout = ({ children }) => {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const handleLogout = () => {
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleConfirmLogout = () => {
+    setShowLogoutModal(false);
     logout();
     navigate('/login');
+  };
+
+  const handleCancelLogout = () => {
+    setShowLogoutModal(false);
   };
 
   const menuItems = [
@@ -81,7 +91,7 @@ const DashboardLayout = ({ children }) => {
             </button>
           </div>
           <div className="flex justify-start">
-            <button onClick={handleLogout} className="inline-flex items-center gap-2 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[var(--text)] transition hover:bg-[var(--panel)]">
+            <button onClick={handleLogoutClick} className="inline-flex items-center gap-2 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[var(--text)] transition hover:bg-[var(--panel)]">
               <FiLogOut size={16} />
               {!sidebarCollapsed && <span>Logout</span>}
             </button>
@@ -103,6 +113,38 @@ const DashboardLayout = ({ children }) => {
 
         <Footer />
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-[var(--card-bg)] rounded-2xl border border-[var(--border)] p-6 max-w-sm w-full mx-4 shadow-2xl">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="flex-shrink-0">
+                <FiAlertCircle className="w-6 h-6 text-yellow-500" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-[var(--text)]">Confirm Logout</h3>
+                <p className="text-[var(--text-muted)] mt-1">Are you sure you want to log out?</p>
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={handleCancelLogout}
+                className="px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] hover:bg-[var(--panel)] transition"
+              >
+                No
+              </button>
+              <button
+                onClick={handleConfirmLogout}
+                className="px-4 py-2 rounded-lg border-2 border-red-500 bg-red-500/10 text-red-500 hover:bg-red-500/20 transition flex items-center gap-2 font-semibold"
+              >
+                <FiLogOut size={16} />
+                Yes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

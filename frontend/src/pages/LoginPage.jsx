@@ -92,10 +92,12 @@ const LoginPage = () => {
             />
             <button
               type="button"
+
               onClick={() => setShowPassword((p) => !p)}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--accent)] hover:opacity-70 transition"
               tabIndex={-1}
               aria-label={showPassword ? 'Hide password' : 'Show password'}
+
             >
               {showPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
             </button>

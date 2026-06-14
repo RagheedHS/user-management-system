@@ -4,6 +4,13 @@ import { userAPI, roleAPI } from '../services/api';
 import UserModal from '../components/UserModal';
 import { useAuth } from '../context/AuthContext';
 
+// Custom CSS for action buttons
+const actionButtonStyles = {
+  edit: 'w-9 h-9 flex items-center justify-center border-2 border-[var(--accent)] text-[var(--accent)] rounded-lg hover:bg-[var(--accent)]/10 transition-all',
+  delete: 'w-9 h-9 flex items-center justify-center border-2 border-red-500 text-red-500 rounded-lg hover:bg-red-500/10 transition-all',
+  status: 'w-16 h-8 flex items-center justify-center rounded-lg font-semibold text-xs'
+};
+
 const UsersPage = () => {
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
@@ -87,7 +94,7 @@ const UsersPage = () => {
         {authUser?.roleName === 'ADMIN' && (
           <button
             onClick={handleAdd}
-            className="flex items-center space-x-2 rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--button-text)] shadow-md shadow-[var(--accent)]/20 transition hover:brightness-105"
+            className="og-btn og-btn-primary flex items-center space-x-2"
           >
             <FiPlus /> <span>Add User</span>
           </button>
@@ -123,35 +130,41 @@ const UsersPage = () => {
                 </td>
                 <td className="px-6 py-4 text-sm text-[var(--text)]">{user.roleName}</td>
                 <td className="px-6 py-4 text-sm">
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      user.active
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}
-                  >
-                    {user.active ? 'Active' : 'Inactive'}
-                  </span>
+                  <div className="flex justify-start">
+                    <span
+                      className={`${actionButtonStyles.status} ${
+                        user.active
+                          ? 'bg-green-500/20 text-green-400'
+                          : 'bg-red-500/20 text-red-400'
+                      }`}
+                    >
+                      {user.active ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
                 </td>
-                  <td className="px-6 py-4 text-sm flex items-center gap-3">
-                  {authUser?.roleName === 'ADMIN' ? (
-                    <>
-                      <button
-                        onClick={() => handleEdit(user)}
-                        className="text-[var(--accent)] hover:text-[var(--accent-2)] font-semibold"
-                      >
-                        <FiEdit />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(user.id)}
-                        className="text-red-500 hover:text-red-700 font-semibold"
-                      >
-                        <FiTrash2 />
-                      </button>
-                    </>
-                  ) : (
-                    <span className="text-sm text-[var(--text-muted)]">—</span>
-                  )}
+                <td className="px-6 py-4 text-sm">
+                  <div className="flex items-center gap-3">
+                    {authUser?.roleName === 'ADMIN' ? (
+                      <>
+                        <button
+                          onClick={() => handleEdit(user)}
+                          className={actionButtonStyles.edit}
+                          title="Edit user"
+                        >
+                          <FiEdit size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(user.id)}
+                          className={actionButtonStyles.delete}
+                          title="Delete user"
+                        >
+                          <FiTrash2 size={18} />
+                        </button>
+                      </>
+                    ) : (
+                      <span className="text-sm text-[var(--text-muted)]">—</span>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
