@@ -85,7 +85,12 @@ const Navbar = ({ onToggleSidebar, isSidebarCollapsed }) => {
               </button>
               {notifOpen && ( 
                 <div className="og-notif-dropdown">
-                  <NotificationsList onClose={() => setNotifOpen(false)} onMarkRead={(c)=>setUnreadCount(c)} />
+                  <NotificationsList
+                    onClose={() => setNotifOpen(false)}
+                    onMarkRead={(c) => setUnreadCount(c)}
+                    setUnreadCount={setUnreadCount}
+                    unreadCount={unreadCount}
+                  />
                 </div>
               )}
             </div>

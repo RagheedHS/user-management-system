@@ -13,6 +13,7 @@ import UsersPage from './pages/UsersPage';
 import RolesPage from './pages/RolesPage';
 import PermissionsPage from './pages/PermissionsPage';
 import RoleHierarchyPage from './pages/RoleHierarchyPage';
+import SecurityAdminPage from './pages/SecurityAdminPage';
 import './App.css';
 
 function App() {
@@ -74,6 +75,16 @@ function App() {
                   <ProtectedRoute>
                     <DashboardLayout>
                       <PermissionsPage />
+                    </DashboardLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/security"
+                element={
+                  <ProtectedRoute>
+                    <DashboardLayout>
+                      <SecurityAdminPage />
                     </DashboardLayout>
                   </ProtectedRoute>
                 }

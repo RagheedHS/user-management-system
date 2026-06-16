@@ -13,6 +13,12 @@ import java.util.stream.Collectors;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import jakarta.persistence.criteria.Predicate;
 
 @Service
 @RequiredArgsConstructor
@@ -67,6 +73,23 @@ public class UserService {
         return userRepository.findAll().stream()
             .map(this::convertToDTO)
             .collect(Collectors.toList());
+    }
+
+    public Page<UserDTO> getUsers(int page, int size, String q) {
+        Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size), Sort.by(Sort.Direction.DESC, "createdAt"));
+        if (q == null || q.trim().isEmpty()) {
+            return userRepository.findAll(pageable).map(this::convertToDTO);
+        } else {
+            final String like = "%" + q.toLowerCase() + "%";
+            Specification<User> spec = (root, cq, cb) -> {
+                Predicate p1 = cb.like(cb.lower(root.get("username")), like);
+                Predicate p2 = cb.like(cb.lower(root.get("email")), like);
+                Predicate p3 = cb.like(cb.lower(root.get("firstName")), like);
+                Predicate p4 = cb.like(cb.lower(root.get("lastName")), like);
+                return cb.or(p1, p2, p3, p4);
+            };
+            return userRepository.findAll(spec, pageable).map(this::convertToDTO);
+        }
     }
 
     public List<UserDTO> getActiveUsers() {

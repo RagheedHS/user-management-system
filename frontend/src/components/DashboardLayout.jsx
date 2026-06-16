@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { useTheme } from '../context/ThemeContext';
 import { FiLogOut, FiHome, FiUsers, FiKey, FiShield, FiSun, FiMoon, FiLayers, FiAlertCircle } from 'react-icons/fi';
 import Navbar from './Navbar';
@@ -11,6 +12,7 @@ const DashboardLayout = ({ children }) => {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleLogoutClick = () => {
@@ -19,6 +21,7 @@ const DashboardLayout = ({ children }) => {
 
   const handleConfirmLogout = () => {
     setShowLogoutModal(false);
+    try { showToast({ type: 'info', message: 'Logged out successfully', always: true, duration: 3200 }); } catch (e) {}
     logout();
     navigate('/login');
   };
@@ -33,6 +36,7 @@ const DashboardLayout = ({ children }) => {
     { label: 'Roles', icon: FiShield, path: '/roles', adminOnly: true },
     { label: 'Hierarchy', icon: FiLayers, path: '/roles/hierarchy', adminOnly: true },
     { label: 'Permissions', icon: FiKey, path: '/permissions', adminOnly: true },
+    { label: 'Security', icon: FiAlertCircle, path: '/admin/security', adminOnly: true },
   ];
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);

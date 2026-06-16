@@ -35,8 +35,22 @@ public class NotificationService {
         Notification n = notificationRepository.findById(id).orElse(null);
         if (n == null) return;
         if (!n.getUser().getUsername().equals(username)) return;
-        n.setIsRead(true);
-        notificationRepository.save(n);
+        if (!Boolean.TRUE.equals(n.getIsRead())) {
+            n.setIsRead(true);
+            notificationRepository.save(n);
+        }
+    }
+
+    public NotificationDTO create(String text, boolean isStatic, String username) {
+        if (username == null) return null;
+        User user = userRepository.findByUsername(username).orElse(null);
+        if (user == null) return null;
+        Notification n = new Notification();
+        n.setUser(user);
+        n.setText(text != null ? text : "");
+        n.setIsStatic(isStatic);
+        Notification saved = notificationRepository.save(n);
+        return toDTO(saved);
     }
 
     public NotificationDTO toDTO(Notification n) {

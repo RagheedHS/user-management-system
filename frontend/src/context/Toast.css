@@ -9,7 +9,7 @@
 }
 .og-toast-center-container {
   position: fixed;
-  top: 36px; /* slightly lower than top */
+  top: 20px; /* slight upper-top placement */
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -18,6 +18,7 @@
   z-index: 10000;
   pointer-events: none;
 }
+.og-toast-center-container .og-toast { text-align: center; }
 .og-toast {
   min-width: 200px;
   max-width: 520px;
@@ -31,3 +32,15 @@
 .og-toast-info { background: linear-gradient(90deg,#3b82f6,#06b6d4); }
 .og-toast-success { background: linear-gradient(90deg,#10b981,#06b6d4); }
 .og-toast-error { background: linear-gradient(90deg,#ef4444,#f97316); }
+
+/* compact toast variant: used for short center messages (e.g., Profile saved)
+   Overrides the global min-width so the pill wraps tightly around its text. */
+.og-toast.compact-toast {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  border-radius: 10px;
+  white-space: nowrap;
+}

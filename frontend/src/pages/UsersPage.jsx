@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { FiEdit, FiTrash2, FiPlus, FiAlertCircle } from 'react-icons/fi';
+import React, { useState, useEffect, useRef } from 'react';
+import { FiEdit, FiTrash2, FiPlus, FiAlertCircle, FiSearch } from 'react-icons/fi';
 import { userAPI, roleAPI } from '../services/api';
 import UserModal from '../components/UserModal';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 // Custom CSS for action buttons
 const actionButtonStyles = {
@@ -19,18 +20,43 @@ const UsersPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const { user: authUser } = useAuth();
+  const { showToast } = useToast();
+
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(20);
+  const [sizeOpen, setSizeOpen] = useState(false);
+  const sizeRef = useRef(null);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const [q, setQ] = useState('');
+  const searchTimer = useRef(null);
+
+  const renderPageNumbers = () => {
+    const pages = [];
+    const start = Math.max(0, page - 2);
+    const end = Math.min(Math.max(0, totalPages - 1), page + 2);
+    for (let p = start; p <= end; p++) pages.push(p);
+    return pages;
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setError('');
+        setLoading(true);
         const [usersRes, rolesRes] = await Promise.all([
-          userAPI.getAll(),
+          userAPI.getAll({ page, size, q }),
           roleAPI.getAll(),
         ]);
-        setUsers(usersRes.data);
+
+        const data = usersRes.data || {};
+        const items = data.content ?? data;
+        setUsers(items);
+        setTotalPages(data.totalPages ?? 0);
+        setTotalElements(data.totalElements ?? (items ? items.length : 0));
         setRoles(rolesRes.data);
       } catch (err) {
+        console.error(err);
         setError('Failed to load users');
       } finally {
         setLoading(false);
@@ -38,7 +64,17 @@ const UsersPage = () => {
     };
 
     fetchData();
-  }, []);
+    }, [page, size, q]);
+
+    // close size dropdown when clicking outside
+    useEffect(() => {
+      const onDocClick = (e) => {
+        if (!sizeRef.current) return;
+        if (!sizeRef.current.contains(e.target)) setSizeOpen(false);
+      };
+      document.addEventListener('mousedown', onDocClick);
+      return () => document.removeEventListener('mousedown', onDocClick);
+    }, []);
 
   const handleAdd = () => {
     setSelectedUser(null);
@@ -54,7 +90,8 @@ const UsersPage = () => {
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
         await userAPI.delete(id);
-        setUsers(users.filter((u) => u.id !== id));
+        showToast({ type: 'success', message: 'User deleted', always: true });
+        setPage(0);
       } catch (err) {
         setError('Failed to delete user');
       }
@@ -65,15 +102,24 @@ const UsersPage = () => {
     try {
       if (selectedUser) {
         await userAPI.update(selectedUser.id, userData, userData.roleId);
-        setUsers(users.map((u) => (u.id === selectedUser.id ? { ...userData, id: selectedUser.id } : u)));
+        showToast({ type: 'success', message: 'User updated', always: true });
       } else {
         const response = await userAPI.create(userData, userData.roleId);
-        setUsers([...users, response.data]);
+        showToast({ type: 'success', message: 'User created', always: true });
+        setPage(0);
       }
       setShowModal(false);
     } catch (err) {
       setError('Failed to save user');
     }
+  };
+
+  const handleSearchChange = (value) => {
+    setQ(value);
+    // reset to first page when searching
+    setPage(0);
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => setQ(value), 300);
   };
 
   if (loading) {
@@ -91,14 +137,25 @@ const UsersPage = () => {
     <div>
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
         <h1 className="text-3xl font-bold text-[var(--text)]">Users Management</h1>
-        {authUser?.roleName === 'ADMIN' && (
-          <button
-            onClick={handleAdd}
-            className="og-btn og-btn-primary flex items-center space-x-2"
-          >
-            <FiPlus /> <span>Add User</span>
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <input
+              placeholder="Search users..."
+              value={q}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="pl-10 pr-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)]"
+            />
+            <FiSearch className="absolute left-3 top-2.5 text-[var(--text-muted)]" />
+          </div>
+          {(authUser?.roleName === 'ADMIN' || authUser?.roleName === 'MANAGER') && (
+            <button
+              onClick={handleAdd}
+              className="og-btn og-btn-primary flex items-center space-x-2"
+            >
+              <FiPlus /> <span>Add User</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {error && (
@@ -130,12 +187,13 @@ const UsersPage = () => {
                 </td>
                 <td className="px-6 py-4 text-sm text-[var(--text)]">{user.roleName}</td>
                 <td className="px-6 py-4 text-sm">
-                  <div className="flex justify-start">
+                  <div className="flex items-center gap-3">
+                    <span className={`w-3 h-3 rounded-full ${user.active ? 'bg-green-400' : 'bg-red-400'} ${user.active ? 'og-pulse-dot' : ''}`} />
                     <span
                       className={`${actionButtonStyles.status} ${
                         user.active
-                          ? 'bg-green-500/20 text-green-400'
-                          : 'bg-red-500/20 text-red-400'
+                          ? 'bg-green-500/10 text-green-400'
+                          : 'bg-red-500/10 text-red-400'
                       }`}
                     >
                       {user.active ? 'Active' : 'Inactive'}
@@ -144,7 +202,7 @@ const UsersPage = () => {
                 </td>
                 <td className="px-6 py-4 text-sm">
                   <div className="flex items-center gap-3">
-                    {authUser?.roleName === 'ADMIN' ? (
+                    {authUser?.roleName === 'ADMIN' || authUser?.roleName === 'MANAGER' ? (
                       <>
                         <button
                           onClick={() => handleEdit(user)}
@@ -153,13 +211,15 @@ const UsersPage = () => {
                         >
                           <FiEdit size={18} />
                         </button>
-                        <button
-                          onClick={() => handleDelete(user.id)}
-                          className={actionButtonStyles.delete}
-                          title="Delete user"
-                        >
-                          <FiTrash2 size={18} />
-                        </button>
+                        {authUser?.roleName === 'ADMIN' ? (
+                          <button
+                            onClick={() => handleDelete(user.id)}
+                            className={actionButtonStyles.delete}
+                            title="Delete user"
+                          >
+                            <FiTrash2 size={18} />
+                          </button>
+                        ) : null}
                       </>
                     ) : (
                       <span className="text-sm text-[var(--text-muted)]">—</span>
@@ -175,6 +235,83 @@ const UsersPage = () => {
             No users found. Click "Add User" to create one.
           </div>
         )}
+      </div>
+
+      {/* Pagination controls */}
+      <div className="flex items-center justify-between mt-4 users-pagination">
+        <div className="text-sm text-[var(--text-muted)]">
+          Showing <strong>{Math.min(page * size + 1, totalElements || 0)}</strong> - <strong>{Math.min((page + 1) * size, totalElements || 0)}</strong> of <strong>{totalElements}</strong>
+        </div>
+        <div className="flex items-center gap-3">
+          <div ref={sizeRef} className="relative inline-block og-select-wrapper og-select-pill h-9 flex items-center px-3">
+            {/* trigger button that displays current size */}
+            <button
+              type="button"
+              className="og-select-trigger w-full flex items-center justify-center gap-2"
+              aria-haspopup="listbox"
+              aria-expanded={sizeOpen}
+              onClick={() => setSizeOpen((s) => !s)}
+              onKeyDown={(e) => { if (e.key === 'Escape') setSizeOpen(false); }}
+            >
+              <span className="og-select-value text-sm font-semibold">{size}</span>
+              <svg aria-hidden="true" className="text-[var(--text-muted)]" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+
+            {/* custom dropdown menu */}
+            {sizeOpen && (
+              <div className="og-select-menu" role="listbox" aria-label="Items per page options">
+                {[10,20,50].map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    role="option"
+                    aria-selected={v === size}
+                    className={`og-select-option ${v === size ? 'selected' : ''}`}
+                    onClick={() => { setSize(v); setPage(0); setSizeOpen(false); }}
+                  >
+                    {v}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              disabled={page <= 0}
+              aria-disabled={page <= 0}
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              className={`og-inline-btn og-inline-btn--glow ${page <= 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              Prev
+            </button>
+
+            <div className="flex items-center gap-1">
+              {renderPageNumbers().map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setPage(p)}
+                  className={`px-3 py-1 rounded-md text-sm font-medium ${p === page ? 'bg-[var(--accent)]/20 text-[var(--accent)] shadow-sm' : 'bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface)]'}`}
+                >
+                  {p + 1}
+                </button>
+              ))}
+            </div>
+
+            <button
+              disabled={page + 1 >= totalPages}
+              aria-disabled={page + 1 >= totalPages}
+              onClick={() => setPage((p) => p + 1)}
+              className={`og-inline-btn og-inline-btn--glow ${page + 1 >= totalPages ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              Next
+            </button>
+          </div>
+
+          <div className="px-3 py-2 text-sm text-[var(--text-muted)]">Page {page + 1} of {Math.max(1, totalPages)}</div>
+        </div>
       </div>
 
       {showModal && (

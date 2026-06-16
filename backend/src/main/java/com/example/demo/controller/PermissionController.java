@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/permissions")
@@ -28,12 +29,14 @@ public class PermissionController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PermissionDTO> createPermission(@RequestBody PermissionDTO permissionDTO) {
         PermissionDTO createdPermission = permissionService.createPermission(permissionDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdPermission);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PermissionDTO> updatePermission(@PathVariable Long id,
                                                           @RequestBody PermissionDTO permissionDTO) {
         PermissionDTO updatedPermission = permissionService.updatePermission(id, permissionDTO);
@@ -41,6 +44,7 @@ public class PermissionController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deletePermission(@PathVariable Long id) {
         permissionService.deletePermission(id);
         return ResponseEntity.noContent().build();

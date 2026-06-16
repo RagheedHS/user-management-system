@@ -6,7 +6,7 @@ const ToastContext = createContext(null);
 export const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
 
-  const showToast = useCallback(({ type = 'info', message = '', always = false, duration = 3800 }) => {
+  const showToast = useCallback(({ type = 'info', message = '', always = false, duration = 3800, compact = false }) => {
     // if not marked always, check user preference for notifications
     if (!always) {
       const enabled = localStorage.getItem('enableNotifications');
@@ -15,7 +15,7 @@ export const ToastProvider = ({ children }) => {
 
     const id = Date.now() + Math.random();
     const position = always ? 'center' : 'right';
-    setToasts((t) => [...t, { id, type, message, position }]);
+    setToasts((t) => [...t, { id, type, message, position, compact }]);
     setTimeout(() => {
       setToasts((t) => t.filter((x) => x.id !== id));
     }, duration);
@@ -28,7 +28,7 @@ export const ToastProvider = ({ children }) => {
       {/* center (login) toasts */}
       <div className="og-toast-center-container" aria-live="polite">
         {toasts.filter((t) => t.position === 'center').map((t) => (
-          <div key={t.id} className={`og-toast og-toast-${t.type}`} role="status">
+          <div key={t.id} className={`og-toast og-toast-${t.type} ${t.compact ? 'compact-toast' : ''}`} role="status">
             {t.message}
           </div>
         ))}
@@ -37,7 +37,7 @@ export const ToastProvider = ({ children }) => {
       {/* default top-right toasts */}
       <div className="og-toast-container" aria-live="polite">
         {toasts.filter((t) => t.position !== 'center').map((t) => (
-          <div key={t.id} className={`og-toast og-toast-${t.type}`} role="status">
+          <div key={t.id} className={`og-toast og-toast-${t.type} ${t.compact ? 'compact-toast' : ''}`} role="status">
             {t.message}
           </div>
         ))}

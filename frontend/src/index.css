@@ -232,6 +232,210 @@ body {
   background: var(--card-bg);
   color: var(--text);
 }
+
+/* Remove native select arrow and unify custom SVG arrow overlay across the app */
+.og-form-select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: none;
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2.5rem; /* space for custom arrow */
+}
+
+/* Hide Microsoft/Edge native dropdown arrow */
+.og-form-select::-ms-expand {
+  display: none;
+}
+
+/* Ensure custom SVG arrow sits above the select control and prevent flashing focus ring
+   We position the SVG relative to a wrapper (.og-select-wrapper) instead of the select itself. */
+.og-form-select {
+  text-align: center;
+  text-align-last: center;
+  -ms-text-align-last: center;
+}
+.og-form-select:focus-visible {
+  box-shadow: none;
+  border-color: var(--input-border);
+}
+
+/* Wrapper for selects that use a custom SVG arrow */
+.og-select-wrapper {
+  position: relative;
+  display: inline-block;
+}
+.og-select-wrapper svg {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Make the inner select transparent when placed inside the styled wrapper
+   so the wrapper provides the visible background and border (single layer). */
+.og-select-wrapper .og-form-select {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  line-height: 1;
+  display: inline-block;
+  text-align: center;
+  text-align-last: center;
+}
+.og-select-wrapper.og-form-control {
+  padding-left: 0.5rem;
+  padding-right: 2.5rem;
+}
+
+/* Dedicated select pill for pagination to avoid double focus/transition styles */
+.og-select-pill {
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 0.35rem;
+  padding-right: 1.4rem;
+  transition: none !important;
+  box-shadow: none !important;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  min-width: 36px;
+}
+.og-select-pill:focus-within { outline: none; }
+
+/* Visible number inside the pill */
+.og-select-value {
+  display: inline-block;
+  min-width: 1.2rem;
+  text-align: center;
+  line-height: 1;
+  padding: 0 0.25rem;
+}
+
+/* make the invisible select cover the pill for clicks */
+.og-select-wrapper .og-form-select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+}
+
+/* Custom dropdown styles */
+.og-select-trigger { background: transparent; border: none; color: inherit; padding: 0; width: 100%; }
+.og-select-trigger:focus { outline: none; }
+.og-select-trigger svg { pointer-events: auto; }
+.og-select-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 56px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 30px rgba(2,6,23,0.6);
+  z-index: 60;
+  padding: 6px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.og-select-option { background: transparent; border: none; color: var(--text); padding: 6px 10px; text-align: center; border-radius:6px; cursor: pointer; }
+.og-select-option:hover { background: rgba(255,255,255,0.02); }
+.og-select-option.selected { background: rgba(14,165,233,0.08); color: var(--accent); font-weight:700 }
+
+/* Responsive: dropdown menu full-width on very small viewports */
+@media (max-width: 420px) {
+  .og-select-menu { left: 0; transform: none; min-width: 44px; }
+}
+
+/* Inline small button with glow state used for Prev/Next */
+.og-inline-btn {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-weight: 600;
+  min-width: 56px;
+}
+.og-inline-btn--glow {
+  box-shadow:
+    0 8px 24px rgba(0,180,216,0.18),
+    0 0 12px rgba(0,180,216,0.08);
+  border-color: rgba(0,180,216,0.24);
+  background: linear-gradient(90deg, rgba(0,180,216,0.06), rgba(0,180,216,0.02));
+  color: var(--accent);
+  transition: transform 150ms ease, box-shadow 200ms ease, background 200ms ease;
+}
+.og-inline-btn--glow:hover,
+.og-inline-btn--glow:focus {
+  transform: translateY(-2px);
+  box-shadow:
+    0 14px 32px rgba(0,180,216,0.22),
+    0 0 18px rgba(0,180,216,0.12);
+}
+.og-inline-btn--glow:active {
+  transform: translateY(0);
+  box-shadow: 0 6px 18px rgba(0,180,216,0.12);
+}
+.og-inline-btn--glow:disabled {
+  opacity: 0.75;
+  box-shadow: 0 6px 14px rgba(0,180,216,0.06);
+  transform: none;
+}
+.og-inline-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Prevent tap highlight and flicker on mobile */
+.og-select-pill, .og-select-trigger { -webkit-tap-highlight-color: transparent; }
+
+/* Pagination-specific fixes: eliminate flashing underlay and stabilize select display */
+.users-pagination .og-select-wrapper {
+  transition: none !important;
+  box-shadow: none !important;
+  background: var(--input-bg) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 1rem !important;
+  overflow: visible !important;
+  -webkit-backface-visibility: hidden; /* avoid flicker on some GPUs */
+  backface-visibility: hidden;
+}
+.users-pagination .og-select-wrapper .og-form-select {
+  background: transparent !important;
+  border: none !important;
+  color: var(--text) !important;
+  font-weight: 600;
+  text-align: center;
+  padding: 0 !important;
+  margin: 0 !important;
+  font-size: 0.95rem;
+  line-height: 1;
+  outline: none !important;
+}
+.users-pagination .og-select-wrapper .og-form-select:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+.users-pagination .og-select-wrapper svg { opacity: 1; }
+
+/* Responsive: keep pill compact on small screens */
+@media (max-width: 640px) {
+  .og-select-pill { padding-left: 0.35rem; padding-right: 1.6rem; min-width: 44px; }
+  .og-select-value { font-size: 0.9rem; }
+}
 .og-alert {
   border-radius: 1rem;
   padding: 0.75rem 1rem;

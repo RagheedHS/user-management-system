@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { notificationAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
-const NotificationsList = ({ onClose, onMarkRead }) => {
+const NotificationsList = ({ onClose, onMarkRead, setUnreadCount, unreadCount }) => {
   const { user } = useAuth();
   const [items, setItems] = useState([]);
 
@@ -16,15 +16,26 @@ const NotificationsList = ({ onClose, onMarkRead }) => {
   useEffect(() => { if (user) load(); }, [user]);
 
   const markRead = async (id) => {
+    // optimistic update: mark locally and decrement badge
+    setItems((s) => s.map(i => i.id === id ? { ...i, isRead: true } : i));
+    if (typeof setUnreadCount === 'function') {
+      setUnreadCount((prev) => Math.max((prev || 1) - 1, 0));
+    } else if (typeof onMarkRead === 'function' && typeof unreadCount === 'number') {
+      onMarkRead(Math.max(unreadCount - 1, 0));
+    }
+
     try {
-      await notificationAPI.markRead(id);
-      setItems((s) => s.map(i => i.id === id ? { ...i, isRead: true } : i));
-      // refresh unread count and notify parent
-      try {
-        const cnt = await notificationAPI.unreadCount();
-        if (typeof onMarkRead === 'function') onMarkRead(cnt.data || 0);
-      } catch (e) { /* ignore */ }
-    } catch (e) { console.warn('mark read failed', e); }
+      const res = await notificationAPI.markRead(id);
+      const newCount = res?.data ?? 0;
+      if (typeof setUnreadCount === 'function') setUnreadCount(newCount);
+      else if (typeof onMarkRead === 'function') onMarkRead(newCount);
+    } catch (e) {
+      console.warn('mark read failed', e);
+      // revert optimistic change on failure
+      setItems((s) => s.map(i => i.id === id ? { ...i, isRead: false } : i));
+      if (typeof setUnreadCount === 'function') setUnreadCount((prev) => (prev || 0) + 1);
+      else if (typeof onMarkRead === 'function') onMarkRead((unreadCount || 0) + 1);
+    }
   };
 
   if (!items.length) return <div className="og-notif-empty">No notifications</div>;

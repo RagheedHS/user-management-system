@@ -28,10 +28,19 @@ public class NotificationController {
         return ResponseEntity.ok(notificationService.unreadCount(username));
     }
 
-    @PostMapping("/{id}/read")
-    public ResponseEntity<Void> markRead(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+    @PutMapping("/{id}/read")
+    public ResponseEntity<Long> markRead(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
         String username = userDetails != null ? userDetails.getUsername() : null;
         notificationService.markRead(id, username);
-        return ResponseEntity.ok().build();
+        long remaining = notificationService.unreadCount(username);
+        return ResponseEntity.ok(remaining);
+    }
+
+    @PostMapping
+    public ResponseEntity<NotificationDTO> create(@RequestBody NotificationDTO dto, @AuthenticationPrincipal UserDetails userDetails) {
+        String username = userDetails != null ? userDetails.getUsername() : null;
+        NotificationDTO created = notificationService.create(dto.getText(), dto.getIsStatic() != null && dto.getIsStatic(), username);
+        if (created == null) return ResponseEntity.badRequest().build();
+        return ResponseEntity.status(201).body(created);
     }
 }

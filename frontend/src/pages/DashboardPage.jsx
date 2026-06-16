@@ -16,13 +16,15 @@ const DashboardPage = () => {
       try {
         setError('');
         const [usersRes, rolesRes, permissionsRes] = await Promise.all([
-          userAPI.getAll(),
+          userAPI.getAll({ page: 0, size: 1 }),
           roleAPI.getAll(),
           permissionAPI.getAll(),
         ]);
 
+        const userCount = usersRes.data?.totalElements ?? usersRes.data?.length ?? (usersRes.data?.content ? usersRes.data.content.length : 0);
+
         setStats({
-          userCount: usersRes.data.length,
+          userCount,
           roleCount: rolesRes.data.length,
           permissionCount: permissionsRes.data.length,
         });

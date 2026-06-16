@@ -11,7 +11,13 @@ const ProfileModal = ({ isOpen, onClose }) => {
   const [saving, setSaving] = useState(false);
   const [fileName, setFileName] = useState('');
   const fileInputRef = useRef(null);
+  const mountedRef = useRef(true);
   const { showToast } = useToast();
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -81,11 +87,14 @@ const ProfileModal = ({ isOpen, onClose }) => {
         localStorage.setItem('user_temp_profile', JSON.stringify(form));
       }
 
-      window.requestAnimationFrame(() => onClose());
-      // light feedback via toast
-      setTimeout(() => { try { showToast({ type: 'success', message: 'Profile saved', duration: 3500 }); } catch (e) {} }, 120);
+      // close modal immediately and show a centered update toast
+      try { if (mountedRef.current) setSaving(false); } catch (e) {}
+      try { onClose(); } catch (e) {}
+      try { showToast({ type: 'success', message: 'Profile updated', always: true, compact: true, duration: 4500 }); } catch (e) {}
     } finally {
-      setSaving(false);
+      if (mountedRef.current) {
+        try { setSaving(false); } catch (e) {}
+      }
     }
   };
 
@@ -131,6 +140,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
             </div>
           </div>
         </div>
+        {/* inline saved overlay removed: closing modal immediately on save, toast will indicate update */}
       </div>
     </ModalContainer>
   );

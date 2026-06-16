@@ -54,8 +54,8 @@ export const authAPI = {
 
 // ─── User API ─────────────────────────────────────────────────────────────────
 export const userAPI = {
-  getAll: () =>
-    api.get('/users'),
+  getAll: ({ page = 0, size = 20, q } = {}) =>
+    api.get('/users', { params: { page, size, q } }),
 
   getActive: () =>
     api.get('/users?active=true'),
@@ -178,6 +178,14 @@ export const notificationAPI = {
 
   markRead: (id) =>
     api.put(`/notifications/${id}/read`),
+};
+
+export const securityAPI = {
+  getCounters: () => api.get('/admin/security/counters'),
+  flush: () => api.post('/admin/security/flush'),
+  getBlocked: () => api.get('/admin/security/blocked'),
+  addBlocked: (ip) => api.post('/admin/security/blocked', null, { params: { ip } }),
+  removeBlocked: (ip) => api.delete('/admin/security/blocked', { params: { ip } }),
 };
 
 export default api;
