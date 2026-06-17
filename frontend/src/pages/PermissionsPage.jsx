@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { FiEdit, FiTrash2, FiPlus, FiAlertCircle } from 'react-icons/fi';
+import React, { useState, useEffect, useMemo } from 'react';
+import { FiEdit, FiTrash2, FiPlus, FiAlertCircle, FiSearch } from 'react-icons/fi';
 import { permissionAPI } from '../services/api';
 import PermissionModal from '../components/PermissionModal';
 
@@ -15,6 +15,10 @@ const PermissionsPage = () => {
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [selectedPermission, setSelectedPermission] = useState(null);
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
 
   useEffect(() => {
     const fetchPermissions = async () => {
@@ -83,16 +87,79 @@ const PermissionsPage = () => {
     );
   }
 
+  const categories = useMemo(() => {
+    const cats = new Set(permissions.map(p => p.category));
+    return ['All', ...Array.from(cats)];
+  }, [permissions]);
+
+  const filteredPermissions = permissions.filter(perm => {
+    const matchesSearch = perm.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          (perm.description && perm.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                          (perm.category && perm.category.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const matchesCategory = categoryFilter === 'All' || perm.category === categoryFilter;
+    const matchesStatus = statusFilter === 'All' || 
+                          (statusFilter === 'Active' && perm.active) || 
+                          (statusFilter === 'Inactive' && !perm.active);
+
+    return matchesSearch && matchesCategory && matchesStatus;
+  });
+
   return (
     <div>
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
         <h1 className="text-3xl font-bold text-[var(--text)]">Permissions Management</h1>
-        <button
-          onClick={handleAdd}
-          className="og-btn og-btn-primary flex items-center space-x-2"
-        >
-          <FiPlus /> <span>Add Permission</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative">
+            <input
+              placeholder="Search permissions..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)]"
+            />
+            <FiSearch className="absolute left-3 top-2.5 text-[var(--text-muted)]" />
+          </div>
+
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm"
+          >
+            {categories.map(cat => (
+              <option key={cat} value={cat}>{cat === 'All' ? 'All Categories' : cat}</option>
+            ))}
+          </select>
+
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm"
+          >
+            <option value="All">All Status</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+
+          {(searchTerm || categoryFilter !== 'All' || statusFilter !== 'All') && (
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setCategoryFilter('All');
+                setStatusFilter('All');
+              }}
+              className="px-4 py-2 text-sm rounded-lg border border-[var(--border)] hover:bg-[var(--surface)] transition-all"
+            >
+              Clear Filters
+            </button>
+          )}
+
+          <button
+            onClick={handleAdd}
+            className="og-btn og-btn-primary flex items-center space-x-2"
+          >
+            <FiPlus /> <span>Add Permission</span>
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -114,7 +181,7 @@ const PermissionsPage = () => {
             </tr>
           </thead>
           <tbody>
-            {permissions.map((permission) => (
+            {filteredPermissions.map((permission) => (
               <tr key={permission.id} className="transition-colors hover:bg-[var(--surface)]">
                 <td className="px-6 py-4 text-sm font-semibold text-[var(--text)]">{permission.name}</td>
                 <td className="px-6 py-4 text-sm text-[var(--text)]">{permission.description}</td>
@@ -154,9 +221,9 @@ const PermissionsPage = () => {
             ))}
           </tbody>
         </table>
-        {permissions.length === 0 && (
+        {filteredPermissions.length === 0 && (
           <div className="text-center py-8 text-[var(--text-muted)]">
-            No permissions found. Click "Add Permission" to create one.
+            No matching records found.
           </div>
         )}
       </div>

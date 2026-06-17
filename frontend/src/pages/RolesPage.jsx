@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiEdit, FiTrash2, FiPlus, FiAlertCircle, FiEye } from 'react-icons/fi';
+import { FiEdit, FiTrash2, FiPlus, FiAlertCircle, FiEye, FiSearch } from 'react-icons/fi';
 import { roleAPI, permissionAPI } from '../services/api';
 import RoleModal from '../components/RoleModal';
 import { useAuth } from '../context/AuthContext';
@@ -18,6 +18,9 @@ const RolesPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedRole, setSelectedRole] = useState(null);
   const { user: authUser } = useAuth();
+  
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -86,11 +89,52 @@ const RolesPage = () => {
     );
   }
 
+  const filteredRoles = roles.filter(role => {
+    const matchesSearch = role.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          role.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'All' || 
+                          (statusFilter === 'Active' && role.active) || 
+                          (statusFilter === 'Inactive' && !role.active);
+    return matchesSearch && matchesStatus;
+  });
+
   return (
     <div>
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
         <h1 className="text-3xl font-bold text-[var(--text)]">Roles Management</h1>
         <div className="flex flex-wrap items-center gap-3">
+          <div className="relative">
+            <input
+              placeholder="Search roles..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)]"
+            />
+            <FiSearch className="absolute left-3 top-2.5 text-[var(--text-muted)]" />
+          </div>
+
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm"
+          >
+            <option value="All">All Status</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+
+          {(searchTerm || statusFilter !== 'All') && (
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setStatusFilter('All');
+              }}
+              className="px-4 py-2 text-sm rounded-lg border border-[var(--border)] hover:bg-[var(--surface)] transition-all"
+            >
+              Clear Filters
+            </button>
+          )}
+
           {authUser?.roleName === 'ADMIN' && (
             <button onClick={handleAdd} className="og-btn og-btn-primary flex items-center space-x-2">
               <FiPlus /> <span>Add Role</span>
@@ -124,7 +168,7 @@ const RolesPage = () => {
             </tr>
           </thead>
           <tbody>
-            {roles.map((role) => (
+            {filteredRoles.map((role) => (
               <tr key={role.id} className="hover:bg-[var(--surface)] transition-colors">
                 <td className="font-semibold text-[var(--text)]">{role.name}</td>
                 <td className="text-[var(--text-muted)]">{role.description}</td>
@@ -163,9 +207,9 @@ const RolesPage = () => {
             ))}
           </tbody>
         </table>
-        {roles.length === 0 && (
+        {filteredRoles.length === 0 && (
           <div className="text-center py-8 text-[var(--text-muted)]">
-            No roles found. Click "Add Role" to create one.
+            No matching records found.
           </div>
         )}
       </div>

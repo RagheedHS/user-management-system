@@ -112,7 +112,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
             long now = System.currentTimeMillis();
             long windowMs = 60_000L;
 
-            long windowStart = windowStarts.getOrDefault(clientIp, now);
+            long windowStart = windowStarts.computeIfAbsent(clientIp, k -> now);
             if (now - windowStart > windowMs) {
                 windowStarts.put(clientIp, now);
                 counters.put(clientIp, new AtomicInteger(1));

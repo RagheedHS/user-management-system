@@ -29,6 +29,8 @@ const UsersPage = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
   const [q, setQ] = useState('');
+  const [roleFilter, setRoleFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
   const searchTimer = useRef(null);
 
   const renderPageNumbers = () => {
@@ -57,7 +59,7 @@ const UsersPage = () => {
         setRoles(rolesRes.data);
       } catch (err) {
         console.error(err);
-        setError('Failed to load users');
+        setError(err.response?.data?.error || err.message || 'Failed to load users');
       } finally {
         setLoading(false);
       }
@@ -114,15 +116,18 @@ const UsersPage = () => {
     }
   };
 
+  const [searchInput, setSearchInput] = useState('');
+
   const handleSearchChange = (value) => {
-    setQ(value);
-    // reset to first page when searching
-    setPage(0);
+    setSearchInput(value);
     if (searchTimer.current) clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => setQ(value), 300);
+    searchTimer.current = setTimeout(() => {
+      setQ(value);
+      setPage(0);
+    }, 400);
   };
 
-  if (loading) {
+  if (loading && users.length === 0) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
@@ -133,6 +138,15 @@ const UsersPage = () => {
     );
   }
 
+  const filteredUsers = users.filter((user) => {
+    const matchesRole = roleFilter === 'All' || user.roleName === roleFilter;
+    const matchesStatus =
+      statusFilter === 'All' ||
+      (statusFilter === 'Active' && user.active) ||
+      (statusFilter === 'Inactive' && !user.active);
+    return matchesRole && matchesStatus;
+  });
+
   return (
     <div>
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
@@ -141,12 +155,47 @@ const UsersPage = () => {
           <div className="relative">
             <input
               placeholder="Search users..."
-              value={q}
+              value={searchInput}
               onChange={(e) => handleSearchChange(e.target.value)}
               className="pl-10 pr-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)]"
             />
             <FiSearch className="absolute left-3 top-2.5 text-[var(--text-muted)]" />
           </div>
+          
+          <select
+            value={roleFilter}
+            onChange={(e) => { setRoleFilter(e.target.value); setPage(0); }}
+            className="px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm"
+          >
+            <option value="All">All Roles</option>
+            {roles.map(r => (
+              <option key={r.id} value={r.name}>{r.name}</option>
+            ))}
+          </select>
+
+          <select
+            value={statusFilter}
+            onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }}
+            className="px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm"
+          >
+            <option value="All">All Status</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+
+          {(q || roleFilter !== 'All' || statusFilter !== 'All') && (
+            <button
+              onClick={() => {
+                setQ('');
+                setRoleFilter('All');
+                setStatusFilter('All');
+                setPage(0);
+              }}
+              className="px-4 py-2 text-sm rounded-lg border border-[var(--border)] hover:bg-[var(--surface)] transition-all"
+            >
+              Clear Filters
+            </button>
+          )}
           {(authUser?.roleName === 'ADMIN' || authUser?.roleName === 'MANAGER') && (
             <button
               onClick={handleAdd}
@@ -178,7 +227,7 @@ const UsersPage = () => {
             </tr>
           </thead>
           <tbody>
-            {users.map((user) => (
+            {filteredUsers.map((user) => (
               <tr key={user.id} className="transition-colors hover:bg-[var(--surface)]">
                 <td className="px-6 py-4 text-sm text-[var(--text)]">{user.username}</td>
                 <td className="px-6 py-4 text-sm text-[var(--text)]">{user.email}</td>
@@ -230,9 +279,9 @@ const UsersPage = () => {
             ))}
           </tbody>
         </table>
-        {users.length === 0 && (
+        {filteredUsers.length === 0 && (
           <div className="text-center py-8 text-[var(--text-muted)]">
-            No users found. Click "Add User" to create one.
+            No matching records found.
           </div>
         )}
       </div>
