@@ -26,7 +26,6 @@ import org.springframework.core.Ordered;
 import org.springframework.beans.factory.annotation.Value;
 import com.example.demo.security.IpRestrictionFilter;
 import com.example.demo.security.RateLimitFilter;
-import org.springframework.web.filter.ForwardedHeaderFilter;
 import org.springframework.security.config.Customizer;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
@@ -72,8 +71,9 @@ public class SecurityConfig {
 
     @Bean
     public FilterRegistrationBean<IpRestrictionFilter> ipRestrictionFilterRegistration(
-            @Value("${security.ip-allowlist:}") String ipAllowList) {
-        IpRestrictionFilter filter = new IpRestrictionFilter(ipAllowList);
+            @Value("${security.ip-allowlist:}") String ipAllowList,
+            @Value("${security.trusted-proxies:}") String trustedProxiesCsv) {
+        IpRestrictionFilter filter = new IpRestrictionFilter(ipAllowList, parseCsv(trustedProxiesCsv));
         FilterRegistrationBean<IpRestrictionFilter> reg = new FilterRegistrationBean<>(filter);
         reg.addUrlPatterns("/api/*");
         reg.setOrder(Ordered.HIGHEST_PRECEDENCE + 1);
@@ -85,12 +85,19 @@ public class SecurityConfig {
             @Value("${security.rate-limit.enabled:true}") boolean enabled,
             @Value("${security.rate-limit.requests-per-minute:60}") int requestsPerMinute,
             @Value("${security.rate-limit.login-requests-per-minute:10}") int loginRequestsPerMinute,
-            @Value("${security.connection-limit.max-concurrent:200}") int maxConcurrent) {
-        RateLimitFilter filter = new RateLimitFilter(enabled, requestsPerMinute, loginRequestsPerMinute, maxConcurrent, io.micrometer.core.instrument.Metrics.globalRegistry);
+            @Value("${security.connection-limit.max-concurrent:200}") int maxConcurrent,
+            @Value("${security.trusted-proxies:}") String trustedProxiesCsv) {
+        RateLimitFilter filter = new RateLimitFilter(enabled, requestsPerMinute, loginRequestsPerMinute, maxConcurrent,
+                parseCsv(trustedProxiesCsv), io.micrometer.core.instrument.Metrics.globalRegistry);
         FilterRegistrationBean<RateLimitFilter> reg = new FilterRegistrationBean<>(filter);
         reg.addUrlPatterns("/api/*");
         reg.setOrder(Ordered.HIGHEST_PRECEDENCE + 2);
         return reg;
+    }
+
+    private static List<String> parseCsv(String csv) {
+        if (csv == null || csv.isBlank()) return List.of();
+        return List.of(csv.split(",")).stream().map(String::trim).filter(s -> !s.isEmpty()).toList();
     }
 
     @Bean
@@ -106,13 +113,13 @@ public class SecurityConfig {
         return reg;
     }
 
-    @Bean
-    public FilterRegistrationBean<ForwardedHeaderFilter> forwardedHeaderFilterRegistration() {
-        ForwardedHeaderFilter filter = new ForwardedHeaderFilter();
-        FilterRegistrationBean<ForwardedHeaderFilter> reg = new FilterRegistrationBean<>(filter);
-        reg.setOrder(Ordered.HIGHEST_PRECEDENCE);
-        return reg;
-    }
+    // NOTE: Spring's ForwardedHeaderFilter intentionally is NOT registered here.
+    // It unconditionally trusts X-Forwarded-*/Forwarded headers and rewrites
+    // request.getRemoteAddr() from them, which lets any client spoof their IP
+    // for every downstream consumer (rate limiting, IP allowlist, audit logs).
+    // This app has no reverse proxy in front of it; if one is added later that
+    // sanitizes/sets these headers, reintroduce this filter scoped to requests
+    // from that proxy's address only.
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
@@ -127,7 +134,7 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/info").permitAll()
                 .requestMatchers("/actuator/**").hasRole("ADMIN")
                 .requestMatchers("/api/public/**").permitAll()
-                .requestMatchers("/h2-console/**").permitAll()
+                .requestMatchers("/h2-console/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .anyRequest().authenticated()
             )

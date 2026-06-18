@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { FiEdit, FiTrash2, FiPlus, FiAlertCircle, FiSearch } from 'react-icons/fi';
 import { permissionAPI } from '../services/api';
 import PermissionModal from '../components/PermissionModal';
@@ -24,30 +24,30 @@ const PermissionsPage = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
 
-  useEffect(() => {
-    const fetchPermissions = async () => {
-      try {
-        setError('');
-        setLoading(true);
-        const response = await permissionAPI.search({
-          page,
-          size,
-          search: searchTerm || undefined,
-          category: categoryFilter === 'All' ? undefined : categoryFilter,
-          active: statusFilter === 'All' ? undefined : statusFilter === 'Active',
-        });
-        setPermissions(response.data.content || []);
-        setTotalPages(response.data.totalPages || 0);
-        setTotalElements(response.data.totalElements || 0);
-      } catch (err) {
-        setError('Failed to load permissions');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPermissions();
+  const fetchPermissions = useCallback(async () => {
+    try {
+      setError('');
+      setLoading(true);
+      const response = await permissionAPI.search({
+        page,
+        size,
+        search: searchTerm || undefined,
+        category: categoryFilter === 'All' ? undefined : categoryFilter,
+        active: statusFilter === 'All' ? undefined : statusFilter === 'Active',
+      });
+      setPermissions(response.data.content || []);
+      setTotalPages(response.data.totalPages || 0);
+      setTotalElements(response.data.totalElements || 0);
+    } catch (err) {
+      setError('Failed to load permissions');
+    } finally {
+      setLoading(false);
+    }
   }, [page, size, searchTerm, categoryFilter, statusFilter]);
+
+  useEffect(() => {
+    fetchPermissions();
+  }, [fetchPermissions]);
 
   const handleAdd = () => {
     setSelectedPermission(null);
@@ -63,7 +63,7 @@ const PermissionsPage = () => {
     if (window.confirm('Are you sure you want to delete this permission?')) {
       try {
         await permissionAPI.delete(id);
-        setPermissions(permissions.filter((p) => p.id !== id));
+        await fetchPermissions();
       } catch (err) {
         setError('Failed to delete permission');
       }
@@ -74,20 +74,21 @@ const PermissionsPage = () => {
     try {
       if (selectedPermission) {
         await permissionAPI.update(selectedPermission.id, permissionData);
-        setPermissions(
-          permissions.map((p) =>
-            p.id === selectedPermission.id ? { ...permissionData, id: selectedPermission.id } : p
-          )
-        );
       } else {
-        const response = await permissionAPI.create(permissionData);
-        setPermissions([...permissions, response.data]);
+        await permissionAPI.create(permissionData);
       }
       setShowModal(false);
+      await fetchPermissions();
     } catch (err) {
-      setError('Failed to save permission');
+      // re-throw so PermissionModal can display the actual server message
+      throw err;
     }
   };
+
+  const categories = useMemo(() => {
+    const cats = new Set(permissions.map(p => p.category).filter(Boolean));
+    return ['All', ...Array.from(cats)];
+  }, [permissions]);
 
   if (loading) {
     return (
@@ -99,11 +100,6 @@ const PermissionsPage = () => {
       </div>
     );
   }
-
-  const categories = useMemo(() => {
-    const cats = new Set(permissions.map(p => p.category).filter(Boolean));
-    return ['All', ...Array.from(cats)];
-  }, [permissions]);
 
   const filteredPermissions = permissions.filter(perm => {
     const matchesSearch = perm.name.toLowerCase().includes(searchTerm.toLowerCase()) || 

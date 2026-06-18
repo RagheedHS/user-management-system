@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FiEdit, FiTrash2, FiPlus, FiAlertCircle, FiEye, FiSearch } from 'react-icons/fi';
 import { roleAPI, permissionAPI } from '../services/api';
 import RoleModal from '../components/RoleModal';
@@ -26,33 +26,33 @@ const RolesPage = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setError('');
-        setLoading(true);
-        const [rolesRes, permissionsRes] = await Promise.all([
-          roleAPI.search({
-            page,
-            size,
-            search: searchTerm || undefined,
-            active: statusFilter === 'All' ? undefined : statusFilter === 'Active',
-          }),
-          permissionAPI.getAll(),
-        ]);
-        setRoles(rolesRes.data.content || []);
-        setTotalPages(rolesRes.data.totalPages || 0);
-        setTotalElements(rolesRes.data.totalElements || 0);
-        setPermissions(permissionsRes.data);
-      } catch (err) {
-        setError('Failed to load roles');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+  const fetchData = useCallback(async () => {
+    try {
+      setError('');
+      setLoading(true);
+      const [rolesRes, permissionsRes] = await Promise.all([
+        roleAPI.search({
+          page,
+          size,
+          search: searchTerm || undefined,
+          active: statusFilter === 'All' ? undefined : statusFilter === 'Active',
+        }),
+        permissionAPI.getAll(),
+      ]);
+      setRoles(rolesRes.data.content || []);
+      setTotalPages(rolesRes.data.totalPages || 0);
+      setTotalElements(rolesRes.data.totalElements || 0);
+      setPermissions(permissionsRes.data);
+    } catch (err) {
+      setError('Failed to load roles');
+    } finally {
+      setLoading(false);
+    }
   }, [page, size, searchTerm, statusFilter]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleAdd = () => {
     setSelectedRole(null);
@@ -68,7 +68,7 @@ const RolesPage = () => {
     if (window.confirm('Are you sure you want to delete this role?')) {
       try {
         await roleAPI.delete(id);
-        setRoles(roles.filter((r) => r.id !== id));
+        await fetchData();
       } catch (err) {
         setError('Failed to delete role');
       }
@@ -79,14 +79,14 @@ const RolesPage = () => {
     try {
       if (selectedRole) {
         await roleAPI.update(selectedRole.id, roleData);
-        setRoles(roles.map((r) => (r.id === selectedRole.id ? { ...roleData, id: selectedRole.id } : r)));
       } else {
-        const response = await roleAPI.create(roleData);
-        setRoles([...roles, response.data]);
+        await roleAPI.create(roleData);
       }
       setShowModal(false);
+      await fetchData();
     } catch (err) {
-      setError('Failed to save role');
+      // re-throw so RoleModal can display the actual server message
+      throw err;
     }
   };
 

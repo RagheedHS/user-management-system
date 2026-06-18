@@ -85,11 +85,10 @@ public class RoleService {
 
     public Page<RoleDTO> getRoles(String search, Boolean active, int page, int size, String sortBy, String sortDir) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDir), sortBy));
-        Specification<Role> spec = Specification.where(RoleSpecification.hasSearch(search));
-        if (active != null) {
-            spec = spec.and(RoleSpecification.hasActive(active));
-        }
-        Page<Role> roles = roleRepository.findAll(spec, pageable);
+        List<Specification<Role>> specs = new ArrayList<>();
+        if (RoleSpecification.hasSearch(search) != null) specs.add(RoleSpecification.hasSearch(search));
+        if (active != null) specs.add(RoleSpecification.hasActive(active));
+        Page<Role> roles = roleRepository.findAll(Specification.allOf(specs), pageable);
         return roles.map(this::convertToDTO);
     }
 

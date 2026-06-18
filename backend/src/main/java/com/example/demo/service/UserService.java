@@ -43,10 +43,12 @@ public class UserService {
             throw new IllegalArgumentException("Email already exists");
         }
 
+        String tempPassword = generateTempPassword();
+
         User user = new User();
         user.setUsername(dto.getUsername());
         user.setEmail(dto.getEmail());
-        user.setPassword(passwordEncoder.encode(dto.getFirstName())); // Temporary password - should be changed
+        user.setPassword(passwordEncoder.encode(tempPassword));
         user.setFirstName(dto.getFirstName());
         user.setLastName(dto.getLastName());
         if (dto.getProfilePhoto() != null) user.setProfilePhoto(dto.getProfilePhoto());
@@ -56,7 +58,21 @@ public class UserService {
             .orElseThrow(() -> new RuntimeException("Role not found with id: " + roleId));
         user.setRole(role);
 
-        return convertToDTO(userRepository.save(user));
+        UserDTO created = convertToDTO(userRepository.save(user));
+        // returned once so the admin can hand it to the new user; never stored or returned again
+        created.setTemporaryPassword(tempPassword);
+        return created;
+    }
+
+    private static final String TEMP_PASSWORD_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%";
+    private static final java.security.SecureRandom RANDOM = new java.security.SecureRandom();
+
+    private static String generateTempPassword() {
+        StringBuilder sb = new StringBuilder(16);
+        for (int i = 0; i < 16; i++) {
+            sb.append(TEMP_PASSWORD_CHARS.charAt(RANDOM.nextInt(TEMP_PASSWORD_CHARS.length())));
+        }
+        return sb.toString();
     }
 
     public UserDTO getUserById(Long id) {
@@ -79,9 +95,11 @@ public class UserService {
 
     public Page<UserDTO> getUsers(int page, int size, String q, String roleName, Boolean active, String sortBy, String sortDir) {
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size), Sort.by(Sort.Direction.fromString(sortDir), sortBy));
-        Specification<User> spec = Specification.where(UserSpecification.hasSearch(q))
-                .and(UserSpecification.hasActive(active))
-                .and(UserSpecification.hasRoleName(roleName));
+        List<Specification<User>> specs = new java.util.ArrayList<>();
+        if (UserSpecification.hasSearch(q) != null) specs.add(UserSpecification.hasSearch(q));
+        if (UserSpecification.hasActive(active) != null) specs.add(UserSpecification.hasActive(active));
+        if (UserSpecification.hasRoleName(roleName) != null) specs.add(UserSpecification.hasRoleName(roleName));
+        Specification<User> spec = Specification.allOf(specs);
         return userRepository.findAll(spec, pageable).map(this::convertToDTO);
     }
 

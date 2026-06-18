@@ -23,4 +23,6 @@ public class UserDTO {
     private String profilePhoto;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private String temporaryPassword;
 }

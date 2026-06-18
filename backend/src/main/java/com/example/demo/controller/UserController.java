@@ -1,15 +1,18 @@
 package com.example.demo.controller;
 
 import com.example.demo.api.PagedResponse;
+import com.example.demo.dto.ChangePasswordRequest;
+import com.example.demo.dto.ResetPasswordRequest;
 import com.example.demo.dto.UserDTO;
 import com.example.demo.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 public class UserController {
 
@@ -50,6 +53,7 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserById(id));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public UserDTO createUser(@RequestBody UserDTO user, @RequestParam Long roleId) {
         return userService.createUser(user, roleId);
@@ -62,9 +66,25 @@ public class UserController {
         return ResponseEntity.ok(userService.updateUser(id, userDetails, roleId));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}/password")
+    public ResponseEntity<Void> changePassword(@PathVariable Long id,
+                                               @Valid @RequestBody ChangePasswordRequest request) {
+        userService.changePassword(id, request.getOldPassword(), request.getNewPassword());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/reset-password")
+    public ResponseEntity<Void> resetPassword(@PathVariable Long id,
+                                              @Valid @RequestBody ResetPasswordRequest request) {
+        userService.resetPassword(id, request.getNewPassword());
         return ResponseEntity.noContent().build();
     }
 }

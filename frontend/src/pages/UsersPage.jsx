@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FiEdit, FiTrash2, FiPlus, FiAlertCircle, FiSearch } from 'react-icons/fi';
 import { userAPI, roleAPI } from '../services/api';
 import UserModal from '../components/UserModal';
@@ -41,32 +41,38 @@ const UsersPage = () => {
     return pages;
   };
 
+  const fetchData = useCallback(async () => {
+    try {
+      setError('');
+      setLoading(true);
+      const [usersRes, rolesRes] = await Promise.all([
+        userAPI.getAll({
+          page,
+          size,
+          q,
+          role: roleFilter !== 'All' ? roleFilter : undefined,
+          active: statusFilter === 'All' ? undefined : statusFilter === 'Active',
+        }),
+        roleAPI.getAll(),
+      ]);
+
+      const data = usersRes.data || {};
+      const items = data.content ?? data;
+      setUsers(items);
+      setTotalPages(data.totalPages ?? 0);
+      setTotalElements(data.totalElements ?? (items ? items.length : 0));
+      setRoles(rolesRes.data);
+    } catch (err) {
+      console.error(err);
+      setError(err.response?.data?.error || err.message || 'Failed to load users');
+    } finally {
+      setLoading(false);
+    }
+  }, [page, size, q, roleFilter, statusFilter]);
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setError('');
-        setLoading(true);
-        const [usersRes, rolesRes] = await Promise.all([
-          userAPI.getAll({ page, size, q }),
-          roleAPI.getAll(),
-        ]);
-
-        const data = usersRes.data || {};
-        const items = data.content ?? data;
-        setUsers(items);
-        setTotalPages(data.totalPages ?? 0);
-        setTotalElements(data.totalElements ?? (items ? items.length : 0));
-        setRoles(rolesRes.data);
-      } catch (err) {
-        console.error(err);
-        setError(err.response?.data?.error || err.message || 'Failed to load users');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchData();
-    }, [page, size, q]);
+  }, [fetchData]);
 
     // close size dropdown when clicking outside
     useEffect(() => {
@@ -93,7 +99,7 @@ const UsersPage = () => {
       try {
         await userAPI.delete(id);
         showToast({ type: 'success', message: 'User deleted', always: true });
-        setPage(0);
+        await fetchData();
       } catch (err) {
         setError('Failed to delete user');
       }
@@ -107,12 +113,20 @@ const UsersPage = () => {
         showToast({ type: 'success', message: 'User updated', always: true });
       } else {
         const response = await userAPI.create(userData, userData.roleId);
-        showToast({ type: 'success', message: 'User created', always: true });
-        setPage(0);
+        const tempPassword = response.data?.temporaryPassword;
+        showToast({
+          type: 'success',
+          message: tempPassword
+            ? `User created. Temporary password: ${tempPassword}`
+            : 'User created',
+          always: true,
+        });
       }
       setShowModal(false);
+      await fetchData();
     } catch (err) {
-      setError('Failed to save user');
+      // re-throw so UserModal can display the actual server message (e.g. "Username already exists")
+      throw err;
     }
   };
 
@@ -138,14 +152,8 @@ const UsersPage = () => {
     );
   }
 
-  const filteredUsers = users.filter((user) => {
-    const matchesRole = roleFilter === 'All' || user.roleName === roleFilter;
-    const matchesStatus =
-      statusFilter === 'All' ||
-      (statusFilter === 'Active' && user.active) ||
-      (statusFilter === 'Inactive' && !user.active);
-    return matchesRole && matchesStatus;
-  });
+  // role/status filtering happens server-side (see fetchData above)
+  const filteredUsers = users;
 
   return (
     <div>

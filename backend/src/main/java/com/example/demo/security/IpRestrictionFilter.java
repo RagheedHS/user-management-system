@@ -18,8 +18,10 @@ import java.util.List;
 public class IpRestrictionFilter extends OncePerRequestFilter {
 
     private final List<String> allowList;
+    private final List<String> trustedProxies;
 
-    public IpRestrictionFilter(String allowListCsv) {
+    public IpRestrictionFilter(String allowListCsv, List<String> trustedProxies) {
+        this.trustedProxies = trustedProxies == null ? List.of() : trustedProxies;
         if (allowListCsv == null || allowListCsv.trim().isEmpty()) {
             this.allowList = List.of();
         } else {
@@ -71,12 +73,8 @@ public class IpRestrictionFilter extends OncePerRequestFilter {
         return false;
     }
 
-    private static String resolveClientIp(HttpServletRequest request) {
-        String xf = request.getHeader("X-Forwarded-For");
-        if (xf != null && !xf.isBlank()) {
-            return xf.split(",")[0].trim();
-        }
-        return request.getRemoteAddr();
+    private String resolveClientIp(HttpServletRequest request) {
+        return ClientIpResolver.resolve(request, trustedProxies);
     }
 
     // IPv4 CIDR matching

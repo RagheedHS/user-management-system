@@ -31,6 +31,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final int requestsPerMinute;
     private final int loginRequestsPerMinute;
     private final int maxConcurrent;
+    private final java.util.List<String> trustedProxies;
 
     private final ConcurrentHashMap<String, AtomicInteger> counters = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Long> windowStarts = new ConcurrentHashMap<>();
@@ -41,19 +42,21 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final Counter rejectedRequestsCounter;
     private final Counter rejectedConnectionsCounter;
 
-    public RateLimitFilter(boolean enabled, int requestsPerMinute, int loginRequestsPerMinute, int maxConcurrent, MeterRegistry registry) {
+    public RateLimitFilter(boolean enabled, int requestsPerMinute, int loginRequestsPerMinute, int maxConcurrent,
+                            java.util.List<String> trustedProxies, MeterRegistry registry) {
         this.enabled = enabled;
         this.requestsPerMinute = Math.max(1, requestsPerMinute);
         this.loginRequestsPerMinute = Math.max(1, loginRequestsPerMinute);
         this.maxConcurrent = Math.max(1, maxConcurrent);
+        this.trustedProxies = trustedProxies == null ? java.util.List.of() : trustedProxies;
         this.rejectedRequestsCounter = registry.counter("security.rate_limit.rejected.requests");
         this.rejectedConnectionsCounter = registry.counter("security.rate_limit.rejected.connections");
         // register self for admin access
         RateLimitRegistry.register(this);
     }
 
-    public RateLimitFilter(boolean enabled, int requestsPerMinute, int loginRequestsPerMinute, int maxConcurrent) {
-        this(enabled, requestsPerMinute, loginRequestsPerMinute, maxConcurrent, io.micrometer.core.instrument.Metrics.globalRegistry);
+    public RateLimitFilter(boolean enabled, int requestsPerMinute, int loginRequestsPerMinute, int maxConcurrent, java.util.List<String> trustedProxies) {
+        this(enabled, requestsPerMinute, loginRequestsPerMinute, maxConcurrent, trustedProxies, io.micrometer.core.instrument.Metrics.globalRegistry);
     }
 
     @Override
@@ -143,12 +146,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
         }
     }
 
-    private static String resolveClientIp(HttpServletRequest request) {
-        String xf = request.getHeader("X-Forwarded-For");
-        if (xf != null && !xf.isBlank()) {
-            return xf.split(",")[0].trim();
-        }
-        return request.getRemoteAddr();
+    private String resolveClientIp(HttpServletRequest request) {
+        return ClientIpResolver.resolve(request, trustedProxies);
     }
 
     // Admin helpers
