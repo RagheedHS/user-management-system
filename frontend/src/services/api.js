@@ -54,8 +54,8 @@ export const authAPI = {
 
 // ─── User API ─────────────────────────────────────────────────────────────────
 export const userAPI = {
-  getAll: ({ page = 0, size = 20, q } = {}) =>
-    api.get('/users', { params: { page, size, q } }),
+  getAll: ({ page = 0, size = 20, q, role, active, sortBy = 'createdAt', sortDir = 'DESC' } = {}) =>
+    api.get('/users', { params: { page, size, q, role, active, sortBy, sortDir } }),
 
   getActive: () =>
     api.get('/users?active=true'),
@@ -97,6 +97,9 @@ export const userAPI = {
 export const roleAPI = {
   getAll: () =>
     api.get('/roles'),
+
+  search: ({ page = 0, size = 20, search, active, sortBy = 'roleLevel', sortDir = 'ASC' } = {}) =>
+    api.get('/roles/search', { params: { page, size, search, active, sortBy, sortDir } }),
 
   getActive: () =>
     api.get('/roles?active=true'),
@@ -144,6 +147,9 @@ export const roleAPI = {
 export const permissionAPI = {
   getAll: () =>
     api.get('/permissions'),
+
+  search: ({ page = 0, size = 20, search, category, active, sortBy = 'name', sortDir = 'ASC' } = {}) =>
+    api.get('/permissions/search', { params: { page, size, search, category, active, sortBy, sortDir } }),
 
   getById: (id) =>
     api.get(`/permissions/${id}`),

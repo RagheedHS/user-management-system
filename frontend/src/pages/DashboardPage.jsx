@@ -17,19 +17,21 @@ const DashboardPage = () => {
         setError('');
         const [usersRes, rolesRes, permissionsRes] = await Promise.all([
           userAPI.getAll({ page: 0, size: 1 }),
-          roleAPI.getAll(),
-          permissionAPI.getAll(),
+          roleAPI.search({ page: 0, size: 1 }),
+          permissionAPI.search({ page: 0, size: 1 }),
         ]);
 
-        const userCount = usersRes.data?.totalElements ?? usersRes.data?.length ?? (usersRes.data?.content ? usersRes.data.content.length : 0);
+        const userCount = usersRes.data?.totalElements ?? 0;
+        const roleCount = rolesRes.data?.totalElements ?? 0;
+        const permissionCount = permissionsRes.data?.totalElements ?? 0;
 
         setStats({
           userCount,
-          roleCount: rolesRes.data.length,
-          permissionCount: permissionsRes.data.length,
+          roleCount,
+          permissionCount,
         });
       } catch (err) {
-        setError('Failed to load dashboard statistics');
+        setError('Failed to load dashboard data.');
       } finally {
         setLoading(false);
       }

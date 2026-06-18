@@ -1,10 +1,18 @@
 package com.example.demo.service;
 
-import com.example.demo.entity.Permission;
 import com.example.demo.dto.PermissionDTO;
+import com.example.demo.entity.Permission;
 import com.example.demo.repository.PermissionRepository;
+import com.example.demo.specification.PermissionSpecification;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,6 +43,14 @@ public class PermissionService {
         return permissionRepository.findAll().stream()
             .map(this::convertToDTO)
             .collect(Collectors.toList());
+    }
+
+    public Page<PermissionDTO> getPermissions(String search, String category, Boolean active, int page, int size, String sortBy, String sortDir) {
+        Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size), Sort.by(Sort.Direction.fromString(sortDir), sortBy));
+        Specification<Permission> spec = Specification.where(PermissionSpecification.hasSearch(search))
+                .and(PermissionSpecification.hasCategory(category))
+                .and(PermissionSpecification.hasActive(active));
+        return permissionRepository.findAll(spec, pageable).map(this::convertToDTO);
     }
 
     public PermissionDTO updatePermission(Long id, PermissionDTO dto) {

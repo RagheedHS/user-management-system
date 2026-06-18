@@ -16,6 +16,13 @@ public class PermissionSpecification {
         );
     }
 
+    public static Specification<Permission> hasCategory(String category) {
+        if (category == null || category.isBlank() || "All".equalsIgnoreCase(category)) {
+            return null;
+        }
+        return (root, query, cb) -> cb.equal(cb.lower(root.get("category")), category.toLowerCase());
+    }
+
     public static Specification<Permission> hasActive(Boolean active) {
         if (active == null) {
             return null;

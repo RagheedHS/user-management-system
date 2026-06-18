@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.dto.PermissionDTO;
 import com.example.demo.service.PermissionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,19 @@ public class PermissionController {
     public ResponseEntity<List<PermissionDTO>> getAllPermissions() {
         List<PermissionDTO> permissions = permissionService.getAllPermissions();
         return ResponseEntity.ok(permissions);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<Page<PermissionDTO>> searchPermissions(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Boolean active,
+            @RequestParam(defaultValue = "name") String sortBy,
+            @RequestParam(defaultValue = "ASC") String sortDir
+    ) {
+        return ResponseEntity.ok(permissionService.getPermissions(search, category, active, page, size, sortBy, sortDir));
     }
 
     @GetMapping("/{id}")

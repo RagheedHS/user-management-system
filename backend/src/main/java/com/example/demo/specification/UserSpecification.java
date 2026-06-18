@@ -23,4 +23,12 @@ public class UserSpecification {
         }
         return (root, query, cb) -> cb.equal(root.get("active"), active);
     }
+
+    public static Specification<User> hasRoleName(String roleName) {
+        if (roleName == null || roleName.isBlank()) {
+            return null;
+        }
+        String normalized = roleName.toLowerCase();
+        return (root, query, cb) -> cb.equal(cb.lower(root.join("role").get("name")), normalized);
+    }
 }
