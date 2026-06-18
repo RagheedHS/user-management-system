@@ -1,85 +1,71 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.UserDTO;
-import com.example.demo.service.UserService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.http.HttpStatus;
+import com.example.demo.model.User;
+import com.example.demo.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
-import org.springframework.data.domain.Page;
 
 @RestController
 @RequestMapping("/api/users")
-@RequiredArgsConstructor
+@CrossOrigin(origins = "*") // Allow requests from any origin for ease of local development
 public class UserController {
 
-    private final UserService userService;
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     @GetMapping
-    public ResponseEntity<?> getAllUsers(@RequestParam(defaultValue = "0") int page,
-                                         @RequestParam(defaultValue = "20") int size,
-                                         @RequestParam(required = false) String q) {
-        Page<UserDTO> users = userService.getUsers(page, size, q);
-        return ResponseEntity.ok(users);
-    }
-
-    @GetMapping("/active")
-    public ResponseEntity<List<UserDTO>> getActiveUsers() {
-        List<UserDTO> users = userService.getActiveUsers();
-        return ResponseEntity.ok(users);
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
-        UserDTO user = userService.getUserById(id);
-        return ResponseEntity.ok(user);
+    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+        return userRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/username/{username}")
-    public ResponseEntity<UserDTO> getUserByUsername(@PathVariable String username) {
-        UserDTO user = userService.getUserByUsername(username);
-        return ResponseEntity.ok(user);
-    }
-
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @PostMapping
-    public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO userDTO,
-                                              @RequestParam Long roleId) {
-        UserDTO createdUser = userService.createUser(userDTO, roleId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
+    public User createUser(@RequestBody User user) {
+        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
+        return userRepository.save(user);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @PutMapping("/{id}")
-    public ResponseEntity<UserDTO> updateUser(@PathVariable Long id,
-                                              @RequestBody UserDTO userDTO,
-                                              @RequestParam(required = false) Long roleId) {
-        UserDTO updatedUser = userService.updateUser(id, userDTO, roleId);
-        return ResponseEntity.ok(updatedUser);
+    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User userDetails) {
+        return userRepository.findById(id)
+                .map(user -> {
+                    user.setName(userDetails.getName());
+                    user.setEmail(userDetails.getEmail());
+                    user.setRole(userDetails.getRole());
+                    user.setStatus(userDetails.getStatus());
+                    if (userDetails.getAvatar() != null) {
+                        user.setAvatar(userDetails.getAvatar());
+                    }
+                    if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
+                        user.setPassword(passwordEncoder.encode(userDetails.getPassword()));
+                    }
+                    User updatedUser = userRepository.save(user);
+                    return ResponseEntity.ok(updatedUser);
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    @PostMapping("/{id}/change-password")
-    public ResponseEntity<String> changePassword(@PathVariable Long id,
-                                                 @RequestParam String oldPassword,
-                                                 @RequestParam String newPassword) {
-        userService.changePassword(id, oldPassword, newPassword);
-        return ResponseEntity.ok("Password changed successfully");
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/{id}/reset-password")
-    public ResponseEntity<String> resetPassword(@PathVariable Long id,
-                                                @RequestParam String newPassword) {
-        userService.resetPassword(id, newPassword);
-        return ResponseEntity.ok("Password reset successfully");
+        return userRepository.findById(id)
+                .map(user -> {
+                    userRepository.delete(user);
+                    return ResponseEntity.ok().<Void>build();
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 }
