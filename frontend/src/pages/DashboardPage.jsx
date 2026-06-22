@@ -17,8 +17,8 @@ const DashboardPage = () => {
         setError('');
         const [usersRes, rolesRes, permissionsRes] = await Promise.all([
           userAPI.getAll({ page: 0, size: 1 }),
-          roleAPI.search({ page: 0, size: 1 }),
-          permissionAPI.search({ page: 0, size: 1 }),
+          roleAPI.getAll({ page: 0, size: 1 }),
+          permissionAPI.getAll({ page: 0, size: 1 }),
         ]);
 
         const userCount = usersRes.data?.totalElements ?? 0;

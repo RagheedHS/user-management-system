@@ -64,31 +64,36 @@ public class SeedDataLoader implements CommandLineRunner {
         adminPermissions.add(viewDashboard);
         adminPermissions.add(viewReports);
 
-        Role adminRole = createRoleIfNotExists("ADMIN", "Administrator", 100, adminPermissions);
+        Role adminRole = createRoleIfNotExists("ADMIN", "Administrator - full control", 100, adminPermissions);
 
-        Set<Permission> managerPermissions = new HashSet<>();
-        managerPermissions.add(readUser);
-        managerPermissions.add(updateUser);
-        managerPermissions.add(createRole);
-        managerPermissions.add(readRole);
-        managerPermissions.add(updateRole);
-        managerPermissions.add(readPermission);
-        managerPermissions.add(viewDashboard);
-        managerPermissions.add(viewReports);
+        // Editor: can view and edit existing records, but cannot create or delete anything
+        Set<Permission> editorPermissions = new HashSet<>();
+        editorPermissions.add(readUser);
+        editorPermissions.add(updateUser);
+        editorPermissions.add(readRole);
+        editorPermissions.add(updateRole);
+        editorPermissions.add(readPermission);
+        editorPermissions.add(updatePermission);
+        editorPermissions.add(viewDashboard);
+        editorPermissions.add(viewReports);
 
-        Role managerRole = createRoleIfNotExists("MANAGER", "Manager", 50, managerPermissions);
+        Role editorRole = createRoleIfNotExists("EDITOR", "Editor - can view and edit, not create or delete", 50, editorPermissions);
 
-        Set<Permission> userPermissions = new HashSet<>();
-        userPermissions.add(readUser);
-        userPermissions.add(viewDashboard);
+        // Reporter: read-only access everywhere
+        Set<Permission> reporterPermissions = new HashSet<>();
+        reporterPermissions.add(readUser);
+        reporterPermissions.add(readRole);
+        reporterPermissions.add(readPermission);
+        reporterPermissions.add(viewDashboard);
+        reporterPermissions.add(viewReports);
 
-        Role userRole = createRoleIfNotExists("USER", "Regular User", 10, userPermissions);
+        Role reporterRole = createRoleIfNotExists("REPORTER", "Reporter - view only", 10, reporterPermissions);
 
         // Create Users
         createUserIfNotExists("admin", "admin@example.com", "password123", "Admin", "User", adminRole);
-        createUserIfNotExists("manager", "manager@example.com", "password123", "Manager", "User", managerRole);
-        createUserIfNotExists("user1", "user1@example.com", "password123", "John", "Doe", userRole);
-        createUserIfNotExists("user2", "user2@example.com", "password123", "Jane", "Smith", userRole);
+        createUserIfNotExists("manager", "manager@example.com", "password123", "Manager", "User", editorRole);
+        createUserIfNotExists("user1", "user1@example.com", "password123", "John", "Doe", reporterRole);
+        createUserIfNotExists("user2", "user2@example.com", "password123", "Jane", "Smith", reporterRole);
     }
 
     private Permission createPermissionIfNotExists(String name, String description, String category) {

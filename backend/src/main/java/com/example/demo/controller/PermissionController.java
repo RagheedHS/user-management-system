@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.api.PagedResponse;
 import com.example.demo.dto.PermissionDTO;
 import com.example.demo.service.PermissionService;
 import lombok.RequiredArgsConstructor;
@@ -18,13 +19,7 @@ public class PermissionController {
     private final PermissionService permissionService;
 
     @GetMapping
-    public ResponseEntity<List<PermissionDTO>> getAllPermissions() {
-        List<PermissionDTO> permissions = permissionService.getAllPermissions();
-        return ResponseEntity.ok(permissions);
-    }
-
-    @GetMapping("/search")
-    public ResponseEntity<Page<PermissionDTO>> searchPermissions(
+    public ResponseEntity<PagedResponse<PermissionDTO>> getPermissions(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String search,
@@ -33,7 +28,21 @@ public class PermissionController {
             @RequestParam(defaultValue = "name") String sortBy,
             @RequestParam(defaultValue = "ASC") String sortDir
     ) {
-        return ResponseEntity.ok(permissionService.getPermissions(search, category, active, page, size, sortBy, sortDir));
+        Page<PermissionDTO> result = permissionService.getPermissions(search, category, active, page, size, sortBy, sortDir);
+        PagedResponse<PermissionDTO> response = new PagedResponse<>();
+        response.setContent(result.getContent());
+        response.setPage(result.getNumber());
+        response.setSize(result.getSize());
+        response.setTotalElements(result.getTotalElements());
+        response.setTotalPages(result.getTotalPages());
+        response.setSortBy(sortBy);
+        response.setSortDir(sortDir);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/active")
+    public ResponseEntity<List<PermissionDTO>> getActivePermissions() {
+        return ResponseEntity.ok(permissionService.getActivePermissions());
     }
 
     @GetMapping("/{id}")
@@ -43,14 +52,14 @@ public class PermissionController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('CREATE_PERMISSION')")
     public ResponseEntity<PermissionDTO> createPermission(@RequestBody PermissionDTO permissionDTO) {
         PermissionDTO createdPermission = permissionService.createPermission(permissionDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdPermission);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('UPDATE_PERMISSION')")
     public ResponseEntity<PermissionDTO> updatePermission(@PathVariable Long id,
                                                           @RequestBody PermissionDTO permissionDTO) {
         PermissionDTO updatedPermission = permissionService.updatePermission(id, permissionDTO);
@@ -58,7 +67,7 @@ public class PermissionController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('DELETE_PERMISSION')")
     public ResponseEntity<Void> deletePermission(@PathVariable Long id) {
         permissionService.deletePermission(id);
         return ResponseEntity.noContent().build();

@@ -40,8 +40,8 @@ public class PermissionService {
         return convertToDTO(permission);
     }
 
-    public List<PermissionDTO> getAllPermissions() {
-        return permissionRepository.findAll().stream()
+    public List<PermissionDTO> getActivePermissions() {
+        return permissionRepository.findByActiveTrue().stream()
             .map(this::convertToDTO)
             .collect(Collectors.toList());
     }

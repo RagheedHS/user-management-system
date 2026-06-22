@@ -25,6 +25,10 @@ public class CustomUserDetailsService implements UserDetailsService {
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
         if (user.getRole() != null) {
             authorities.add(new SimpleGrantedAuthority("ROLE_" + user.getRole().getName().toUpperCase()));
+            if (user.getRole().getPermissions() != null) {
+                user.getRole().getPermissions().forEach(permission ->
+                        authorities.add(new SimpleGrantedAuthority(permission.getName())));
+            }
         }
 
         return org.springframework.security.core.userdetails.User

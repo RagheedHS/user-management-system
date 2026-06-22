@@ -53,7 +53,7 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserById(id));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('CREATE_USER')")
     @PostMapping
     public UserDTO createUser(@RequestBody UserDTO user, @RequestParam Long roleId) {
         return userService.createUser(user, roleId);
@@ -66,7 +66,7 @@ public class UserController {
         return ResponseEntity.ok(userService.updateUser(id, userDetails, roleId));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('DELETE_USER')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
@@ -81,7 +81,7 @@ public class UserController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/{id}/reset-password")
+    @PutMapping("/{id}/reset-password") // admin-only password reset is intentionally tied to the role, not a CRUD permission
     public ResponseEntity<Void> resetPassword(@PathVariable Long id,
                                               @Valid @RequestBody ResetPasswordRequest request) {
         userService.resetPassword(id, request.getNewPassword());

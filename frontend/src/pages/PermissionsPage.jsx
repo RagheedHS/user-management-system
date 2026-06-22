@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { FiEdit, FiTrash2, FiPlus, FiAlertCircle, FiSearch } from 'react-icons/fi';
 import { permissionAPI } from '../services/api';
 import PermissionModal from '../components/PermissionModal';
+import { useAuth } from '../context/AuthContext';
 
 // Custom CSS for action buttons
 const actionButtonStyles = {
@@ -15,6 +16,7 @@ const PermissionsPage = () => {
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [selectedPermission, setSelectedPermission] = useState(null);
+  const { user: authUser } = useAuth();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
@@ -28,7 +30,7 @@ const PermissionsPage = () => {
     try {
       setError('');
       setLoading(true);
-      const response = await permissionAPI.search({
+      const response = await permissionAPI.getAll({
         page,
         size,
         search: searchTerm || undefined,
@@ -162,12 +164,14 @@ const PermissionsPage = () => {
             </button>
           )}
 
-          <button
-            onClick={handleAdd}
-            className="og-btn og-btn-primary flex items-center space-x-2"
-          >
-            <FiPlus /> <span>Add Permission</span>
-          </button>
+          {authUser?.roleName === 'ADMIN' && (
+            <button
+              onClick={handleAdd}
+              className="og-btn og-btn-primary flex items-center space-x-2"
+            >
+              <FiPlus /> <span>Add Permission</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -211,20 +215,27 @@ const PermissionsPage = () => {
                   </span>
                 </td>
                 <td className="px-6 py-4 text-sm flex items-center gap-3">
-                  <button
-                    onClick={() => handleEdit(permission)}
-                    className={actionButtonStyles.edit}
-                    title="Edit permission"
-                  >
-                    <FiEdit size={18} />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(permission.id)}
-                    className={actionButtonStyles.delete}
-                    title="Delete permission"
-                  >
-                    <FiTrash2 size={18} />
-                  </button>
+                  {authUser?.roleName === 'ADMIN' || authUser?.roleName === 'EDITOR' ? (
+                    <button
+                      onClick={() => handleEdit(permission)}
+                      className={actionButtonStyles.edit}
+                      title="Edit permission"
+                    >
+                      <FiEdit size={18} />
+                    </button>
+                  ) : null}
+                  {authUser?.roleName === 'ADMIN' ? (
+                    <button
+                      onClick={() => handleDelete(permission.id)}
+                      className={actionButtonStyles.delete}
+                      title="Delete permission"
+                    >
+                      <FiTrash2 size={18} />
+                    </button>
+                  ) : null}
+                  {authUser?.roleName !== 'ADMIN' && authUser?.roleName !== 'EDITOR' ? (
+                    <span className="text-sm text-[var(--text-muted)]">—</span>
+                  ) : null}
                 </td>
               </tr>
             ))}

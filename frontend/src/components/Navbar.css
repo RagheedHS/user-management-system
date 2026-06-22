@@ -33,7 +33,7 @@
 
 /* Notification */
 .og-bell { position:relative; background:transparent; border:none; color:var(--text); padding:8px; border-radius:8px; cursor:pointer }
-.og-badge { position:absolute; top:4px; right:4px; background:var(--danger); color:white; font-size:10px; padding:2px 6px; border-radius:999px }
+.og-notif-badge { position:absolute; top:4px; right:4px; background:var(--danger); color:white; font-size:10px; padding:2px 6px; border-radius:999px }
 .og-notif-dropdown { 
   position:absolute; 
   right:8px; 

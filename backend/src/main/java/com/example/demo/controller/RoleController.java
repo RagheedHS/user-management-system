@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.api.PagedResponse;
 import com.example.demo.dto.RoleDTO;
 import com.example.demo.dto.CreateRoleRequest;
 import com.example.demo.dto.RoleHierarchyDTO;
@@ -22,13 +23,7 @@ public class RoleController {
     private final RoleService roleService;
 
     @GetMapping
-    public ResponseEntity<List<RoleDTO>> getAllRoles() {
-        List<RoleDTO> roles = roleService.getAllRoles();
-        return ResponseEntity.ok(roles);
-    }
-
-    @GetMapping("/search")
-    public ResponseEntity<?> searchRoles(
+    public ResponseEntity<PagedResponse<RoleDTO>> getRoles(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Boolean active,
             @RequestParam(defaultValue = "0") int page,
@@ -36,7 +31,16 @@ public class RoleController {
             @RequestParam(defaultValue = "roleLevel") String sortBy,
             @RequestParam(defaultValue = "ASC") String sortDir
     ) {
-        return ResponseEntity.ok(roleService.getRoles(search, active, page, size, sortBy, sortDir));
+        org.springframework.data.domain.Page<RoleDTO> result = roleService.getRoles(search, active, page, size, sortBy, sortDir);
+        PagedResponse<RoleDTO> response = new PagedResponse<>();
+        response.setContent(result.getContent());
+        response.setPage(result.getNumber());
+        response.setSize(result.getSize());
+        response.setTotalElements(result.getTotalElements());
+        response.setTotalPages(result.getTotalPages());
+        response.setSortBy(sortBy);
+        response.setSortDir(sortDir);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/active")
@@ -52,14 +56,14 @@ public class RoleController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('CREATE_ROLE')")
     public ResponseEntity<RoleDTO> createRole(@Valid @RequestBody CreateRoleRequest roleRequest,
                                               Principal principal) {
         RoleDTO createdRole = roleService.createRole(roleRequest, principal.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(createdRole);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('UPDATE_ROLE')")
     @PutMapping("/{id}")
     public ResponseEntity<RoleDTO> updateRole(@PathVariable Long id,
                                               @Valid @RequestBody UpdateRoleRequest roleRequest,
@@ -68,14 +72,14 @@ public class RoleController {
         return ResponseEntity.ok(updatedRole);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('DELETE_ROLE')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRole(@PathVariable Long id, Principal principal) {
         roleService.deleteRole(id, principal != null ? principal.getName() : "SYSTEM");
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('UPDATE_ROLE')")
     @PostMapping("/{roleId}/permissions/{permissionId}")
     public ResponseEntity<RoleDTO> addPermissionToRole(@PathVariable Long roleId,
                                                        @PathVariable Long permissionId,
@@ -85,7 +89,7 @@ public class RoleController {
         return ResponseEntity.ok(role);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('UPDATE_ROLE')")
     @DeleteMapping("/{roleId}/permissions/{permissionId}")
     public ResponseEntity<RoleDTO> removePermissionFromRole(@PathVariable Long roleId,
                                                             @PathVariable Long permissionId,
@@ -100,7 +104,7 @@ public class RoleController {
         return ResponseEntity.ok(roleService.getHierarchy());
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('UPDATE_ROLE')")
     @PutMapping("/{id}/parent")
     public ResponseEntity<RoleDTO> updateParentRole(@PathVariable Long id,
                                                     @RequestParam(required = false) Long parentRoleId,

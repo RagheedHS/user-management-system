@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { userAPI } from '../services/api';
@@ -7,12 +8,19 @@ import './ProfileModal.css';
 
 const ProfileModal = ({ isOpen, onClose }) => {
   const { user, setUser } = useAuth();
-  const [form, setForm] = useState({ firstName: '', lastName: '', profilePhoto: null });
+  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', profilePhoto: null });
+  const [meta, setMeta] = useState({ username: '', roleName: '', active: true });
   const [saving, setSaving] = useState(false);
   const [fileName, setFileName] = useState('');
   const fileInputRef = useRef(null);
   const mountedRef = useRef(true);
   const { showToast } = useToast();
+
+  const [passwordForm, setPasswordForm] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
+  const [showOld, setShowOld] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
 
   useEffect(() => {
     mountedRef.current = true;
@@ -21,7 +29,9 @@ const ProfileModal = ({ isOpen, onClose }) => {
 
   useEffect(() => {
     if (isOpen) {
-      // Try to fetch fresh profile from backend if available
+      setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
+      setPasswordError('');
+
       let mounted = true;
       (async () => {
         try {
@@ -32,7 +42,13 @@ const ProfileModal = ({ isOpen, onClose }) => {
             setForm({
               firstName: data.firstName || data.username || user?.username || '',
               lastName: data.lastName || '',
+              email: data.email || user?.email || '',
               profilePhoto: data.profilePhoto || user?.profilePhoto || null,
+            });
+            setMeta({
+              username: data.username || user?.username || '',
+              roleName: data.roleName || user?.roleName || '',
+              active: data.active !== undefined ? data.active : true,
             });
             return;
           }
@@ -43,8 +59,10 @@ const ProfileModal = ({ isOpen, onClose }) => {
         setForm({
           firstName: user?.firstName || user?.username || '',
           lastName: user?.lastName || '',
+          email: user?.email || '',
           profilePhoto: user?.profilePhoto || null,
         });
+        setMeta({ username: user?.username || '', roleName: user?.roleName || '', active: true });
       })();
       return () => { mounted = false; };
     }
@@ -67,19 +85,14 @@ const ProfileModal = ({ isOpen, onClose }) => {
     setSaving(true);
     try {
       if (user?.userId) {
-        // Try to update via API, fallback to localStorage update
-        try {
-          await userAPI.update(user.userId, {
-            firstName: form.firstName,
-            lastName: form.lastName,
-            profilePhoto: form.profilePhoto,
-          });
-        } catch (err) {
-          // ignore network errors and fall back
-          console.warn('Profile API update failed, falling back to local cache', err?.message || err);
-        }
+        await userAPI.update(user.userId, {
+          firstName: form.firstName,
+          lastName: form.lastName,
+          email: form.email,
+          profilePhoto: form.profilePhoto,
+        });
 
-        const updated = { ...user, firstName: form.firstName, lastName: form.lastName, profilePhoto: form.profilePhoto };
+        const updated = { ...user, firstName: form.firstName, lastName: form.lastName, email: form.email, profilePhoto: form.profilePhoto };
         localStorage.setItem('user', JSON.stringify(updated));
         try { if (typeof setUser === 'function') setUser(updated); } catch (e) {}
       } else {
@@ -87,13 +100,48 @@ const ProfileModal = ({ isOpen, onClose }) => {
         localStorage.setItem('user_temp_profile', JSON.stringify(form));
       }
 
-      // close modal immediately and show a centered update toast
-      try { if (mountedRef.current) setSaving(false); } catch (e) {}
-      try { onClose(); } catch (e) {}
-      try { showToast({ type: 'success', message: 'Profile updated', always: true, compact: true, duration: 4500 }); } catch (e) {}
+      showToast({ type: 'success', message: 'Profile updated', always: true, compact: true, duration: 4500 });
+    } catch (err) {
+      showToast({
+        type: 'error',
+        message: err.response?.data?.message || 'Failed to update profile',
+        always: true,
+        compact: true,
+        duration: 4500,
+      });
     } finally {
       if (mountedRef.current) {
-        try { setSaving(false); } catch (e) {}
+        setSaving(false);
+      }
+    }
+  };
+
+  const handleChangePassword = async () => {
+    setPasswordError('');
+
+    if (!passwordForm.oldPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      setPasswordError('All password fields are required');
+      return;
+    }
+    if (passwordForm.newPassword.length < 6) {
+      setPasswordError('New password must be at least 6 characters');
+      return;
+    }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordError('New password and confirmation do not match');
+      return;
+    }
+
+    setPasswordSaving(true);
+    try {
+      await userAPI.changePassword(user.userId, passwordForm.oldPassword, passwordForm.newPassword);
+      setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
+      showToast({ type: 'success', message: 'Password changed', always: true, compact: true, duration: 4500 });
+    } catch (err) {
+      setPasswordError(err.response?.data?.message || 'Failed to change password');
+    } finally {
+      if (mountedRef.current) {
+        setPasswordSaving(false);
       }
     }
   };
@@ -104,11 +152,11 @@ const ProfileModal = ({ isOpen, onClose }) => {
     <ModalContainer isOpen={isOpen} onClose={onClose}>
       <div className="profile-panel max-w-lg w-full" style={{ transform: 'translateY(-4px)' }}>
         <div className="profile-panel-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <h3 className="text-lg font-semibold">Edit profile</h3>
+          <h3 className="text-lg font-semibold">My Profile</h3>
           <button onClick={onClose} className="text-[var(--text-muted)]">×</button>
         </div>
 
-        <div className="profile-panel-body">
+        <div className="profile-panel-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
           <div className="profile-grid">
             <div className="profile-header">
               <div className="profile-avatar profile-avatar-lg">
@@ -124,6 +172,21 @@ const ProfileModal = ({ isOpen, onClose }) => {
               </div>
             </div>
 
+            <div className="profile-meta-row">
+              <div>
+                <span className="og-form-label block mb-1">Username</span>
+                <span className="profile-meta-value">{meta.username}</span>
+              </div>
+              <div>
+                <span className="og-form-label block mb-1">Role</span>
+                <span className="rounded-lg bg-[var(--surface)] px-3 py-1 text-xs font-semibold text-[var(--text-muted)]">{meta.roleName}</span>
+              </div>
+              <div>
+                <span className="og-form-label block mb-1">Status</span>
+                <span className={`og-badge ${meta.active ? 'og-badge--active' : 'og-badge--inactive'}`}>{meta.active ? 'Active' : 'Inactive'}</span>
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm og-form-label mb-1">First name</label>
               <input value={form.firstName} onChange={(e) => setForm((s) => ({ ...s, firstName: e.target.value }))} className="og-form-control" />
@@ -134,13 +197,71 @@ const ProfileModal = ({ isOpen, onClose }) => {
               <input value={form.lastName} onChange={(e) => setForm((s) => ({ ...s, lastName: e.target.value }))} className="og-form-control" />
             </div>
 
+            <div>
+              <label className="block text-sm og-form-label mb-1">Email</label>
+              <input type="email" value={form.email} onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))} className="og-form-control" />
+            </div>
+
             <div className="profile-actions">
               <button onClick={onClose} className="og-btn og-btn-ghost">Cancel</button>
               <button onClick={handleSave} disabled={saving} className="og-btn og-btn-primary">{saving ? 'Saving...' : 'Save changes'}</button>
             </div>
+
+            <div className="profile-section-divider" />
+
+            <h4 className="text-sm font-semibold text-[var(--text)]">Change password</h4>
+
+            {passwordError && (
+              <div className="og-alert og-alert-error">{passwordError}</div>
+            )}
+
+            <div>
+              <label className="block text-sm og-form-label mb-1">Current password</label>
+              <div className="profile-password-input">
+                <input
+                  type={showOld ? 'text' : 'password'}
+                  value={passwordForm.oldPassword}
+                  onChange={(e) => setPasswordForm((s) => ({ ...s, oldPassword: e.target.value }))}
+                  className="og-form-control"
+                />
+                <button type="button" className="profile-password-toggle" onClick={() => setShowOld((s) => !s)} aria-label="Toggle current password visibility">
+                  {showOld ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm og-form-label mb-1">New password</label>
+              <div className="profile-password-input">
+                <input
+                  type={showNew ? 'text' : 'password'}
+                  value={passwordForm.newPassword}
+                  onChange={(e) => setPasswordForm((s) => ({ ...s, newPassword: e.target.value }))}
+                  className="og-form-control"
+                />
+                <button type="button" className="profile-password-toggle" onClick={() => setShowNew((s) => !s)} aria-label="Toggle new password visibility">
+                  {showNew ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm og-form-label mb-1">Confirm new password</label>
+              <input
+                type={showNew ? 'text' : 'password'}
+                value={passwordForm.confirmPassword}
+                onChange={(e) => setPasswordForm((s) => ({ ...s, confirmPassword: e.target.value }))}
+                className="og-form-control"
+              />
+            </div>
+
+            <div className="profile-actions">
+              <button onClick={handleChangePassword} disabled={passwordSaving} className="og-btn og-btn-primary">
+                {passwordSaving ? 'Changing...' : 'Change password'}
+              </button>
+            </div>
           </div>
         </div>
-        {/* inline saved overlay removed: closing modal immediately on save, toast will indicate update */}
       </div>
     </ModalContainer>
   );

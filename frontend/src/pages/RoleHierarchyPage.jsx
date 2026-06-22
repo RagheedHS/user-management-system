@@ -68,7 +68,7 @@ const RoleHierarchyPage = () => {
   const load = async () => {
     try {
       setError('');
-      const [hRes, allRes] = await Promise.all([roleAPI.getHierarchy(), roleAPI.getAll()]);
+      const [hRes, allRes] = await Promise.all([roleAPI.getHierarchy(), roleAPI.getActive()]);
       setTree(hRes.data);
       setRoles(allRes.data);
     } catch (err) {

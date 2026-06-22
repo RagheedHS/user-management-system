@@ -112,22 +112,23 @@ public class UserService {
     public UserDTO updateUser(Long id, UserDTO dto, Long roleId) {
         User user = userRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
-        // security: only admins can change role or active flag; users can update their own profile fields
+        // Admin and Editor (UPDATE_USER) can edit any user including role/active; everyone else
+        // (e.g. Reporter) can only edit their own basic profile fields, never role/active.
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        boolean isAdmin = auth != null && auth.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+        boolean canManageUsers = auth != null && auth.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()) || "UPDATE_USER".equals(a.getAuthority()));
         String authName = auth != null ? auth.getName() : null;
+        boolean isSelf = user.getUsername().equals(authName);
 
-        if (!isAdmin) {
-            // non-admins cannot change role or active status
+        if (!canManageUsers && !isSelf) {
+            throw new AccessDeniedException("Not authorized to update this user");
+        }
+        if (!canManageUsers) {
             if (roleId != null) {
                 throw new AccessDeniedException("Not authorized to change role");
             }
             if (dto.getActive() != null) {
                 throw new AccessDeniedException("Not authorized to change active status");
-            }
-            // non-admins can only update their own profile
-            if (!user.getUsername().equals(authName)) {
-                throw new AccessDeniedException("Not authorized to update this user");
             }
         }
 

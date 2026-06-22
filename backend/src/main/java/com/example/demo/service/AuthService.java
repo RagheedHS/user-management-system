@@ -65,9 +65,9 @@ public class AuthService {
         user.setLastName(registerRequest.getLastName());
         user.setActive(true);
 
-        // Assign default role (User role)
-        Role defaultRole = roleRepository.findByName("USER")
-            .orElseThrow(() -> new RuntimeException("Default USER role not found. Please run seed data."));
+        // Assign default role (read-only) to self-registered accounts
+        Role defaultRole = roleRepository.findByName("REPORTER")
+            .orElseThrow(() -> new RuntimeException("Default REPORTER role not found. Please run seed data."));
         user.setRole(defaultRole);
 
         User savedUser = userRepository.save(user);

@@ -31,13 +31,13 @@ const RolesPage = () => {
       setError('');
       setLoading(true);
       const [rolesRes, permissionsRes] = await Promise.all([
-        roleAPI.search({
+        roleAPI.getAll({
           page,
           size,
           search: searchTerm || undefined,
           active: statusFilter === 'All' ? undefined : statusFilter === 'Active',
         }),
-        permissionAPI.getAll(),
+        permissionAPI.getActive(),
       ]);
       setRoles(rolesRes.data.content || []);
       setTotalPages(rolesRes.data.totalPages || 0);
@@ -186,7 +186,7 @@ const RolesPage = () => {
                 </td>
                 <td>
                   <div className="flex items-center gap-3">
-                    {authUser?.roleName === 'ADMIN' ? (
+                    {authUser?.roleName === 'ADMIN' || authUser?.roleName === 'EDITOR' ? (
                       <>
                         <button
                           onClick={() => handleEdit(role)}
@@ -195,6 +195,7 @@ const RolesPage = () => {
                         >
                           <FiEdit size={18} />
                         </button>
+                        {authUser?.roleName === 'ADMIN' && (
                         <button
                           onClick={() => handleDelete(role.id)}
                           className={actionButtonStyles.delete}
@@ -202,6 +203,7 @@ const RolesPage = () => {
                         >
                           <FiTrash2 size={18} />
                         </button>
+                        )}
                       </>
                     ) : (
                       <span className="text-sm text-[var(--text-muted)]">—</span>

@@ -50,3 +50,24 @@
 	white-space: nowrap;
 }
 
+/* profile meta row (username/role/status) */
+.profile-meta-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.profile-meta-value { color: var(--text); font-weight: 600; }
+
+.profile-section-divider { border-top: 1px solid var(--border); margin: 10px 0 4px; }
+
+/* password field with show/hide toggle */
+.profile-password-input { position: relative; display: flex; align-items: center; }
+.profile-password-input .og-form-control { padding-right: 2.5rem; }
+.profile-password-toggle {
+	position: absolute;
+	right: 0.75rem;
+	background: none;
+	border: none;
+	color: var(--text-muted);
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+}
+.profile-password-toggle:hover { color: var(--text); }
+

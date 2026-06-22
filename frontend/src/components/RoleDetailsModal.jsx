@@ -10,7 +10,7 @@ const RoleDetailsModal = ({ roleId, roles, onClose, onUpdated }) => {
 
   useEffect(() => {
     const load = async () => {
-      const [rRes, pRes] = await Promise.all([roleAPI.getById(roleId), permissionAPI.getAll()]);
+      const [rRes, pRes] = await Promise.all([roleAPI.getById(roleId), permissionAPI.getActive()]);
       setRole(rRes.data);
       setParentRoleId(rRes.data.parentRoleId || '');
       setAllPermissions(pRes.data);

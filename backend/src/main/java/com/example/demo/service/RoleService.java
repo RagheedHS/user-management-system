@@ -69,13 +69,6 @@ public class RoleService {
         return convertToDTO(role);
     }
 
-    public List<RoleDTO> getAllRoles() {
-        return roleRepository.findAll(Sort.by(Sort.Direction.ASC, "roleLevel"))
-                .stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
-
     public List<RoleDTO> getActiveRoles() {
         return roleRepository.findByActiveTrue()
                 .stream()

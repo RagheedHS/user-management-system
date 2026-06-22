@@ -81,7 +81,7 @@ const Navbar = ({ onToggleSidebar, isSidebarCollapsed }) => {
             <div className="og-notif-wrapper">
               <button className="og-bell" onClick={() => { setNotifOpen((s) => !s); setSettingsOpen(false); setProfileOpen(false); }} aria-label="Notifications">
                 <FiBell size={18} />
-                {unreadCount > 0 && <span className="og-badge">{unreadCount}</span>}
+                {unreadCount > 0 && <span className="og-notif-badge">{unreadCount}</span>}
               </button>
               {notifOpen && ( 
                 <div className="og-notif-dropdown">

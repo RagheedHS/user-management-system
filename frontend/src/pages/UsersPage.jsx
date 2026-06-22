@@ -53,7 +53,7 @@ const UsersPage = () => {
           role: roleFilter !== 'All' ? roleFilter : undefined,
           active: statusFilter === 'All' ? undefined : statusFilter === 'Active',
         }),
-        roleAPI.getAll(),
+        roleAPI.getActive(),
       ]);
 
       const data = usersRes.data || {};
@@ -204,7 +204,7 @@ const UsersPage = () => {
               Clear Filters
             </button>
           )}
-          {(authUser?.roleName === 'ADMIN' || authUser?.roleName === 'MANAGER') && (
+          {authUser?.roleName === 'ADMIN' && (
             <button
               onClick={handleAdd}
               className="og-btn og-btn-primary flex items-center space-x-2"
@@ -259,7 +259,7 @@ const UsersPage = () => {
                 </td>
                 <td className="px-6 py-4 text-sm">
                   <div className="flex items-center gap-3">
-                    {authUser?.roleName === 'ADMIN' || authUser?.roleName === 'MANAGER' ? (
+                    {authUser?.roleName === 'ADMIN' || authUser?.roleName === 'EDITOR' ? (
                       <>
                         <button
                           onClick={() => handleEdit(user)}

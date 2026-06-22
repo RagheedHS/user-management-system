@@ -82,6 +82,7 @@ export const userAPI = {
       firstName: userData.firstName,
       lastName: userData.lastName,
       active: userData.active,
+      profilePhoto: userData.profilePhoto,
     }),
   delete: (id) =>
     api.delete(`/users/${id}`),
@@ -95,14 +96,11 @@ export const userAPI = {
 
 // ─── Role API ─────────────────────────────────────────────────────────────────
 export const roleAPI = {
-  getAll: () =>
-    api.get('/roles'),
-
-  search: ({ page = 0, size = 20, search, active, sortBy = 'roleLevel', sortDir = 'ASC' } = {}) =>
-    api.get('/roles/search', { params: { page, size, search, active, sortBy, sortDir } }),
+  getAll: ({ page = 0, size = 20, search, active, sortBy = 'roleLevel', sortDir = 'ASC' } = {}) =>
+    api.get('/roles', { params: { page, size, search, active, sortBy, sortDir } }),
 
   getActive: () =>
-    api.get('/roles?active=true'),
+    api.get('/roles/active'),
 
   getById: (id) =>
     api.get(`/roles/${id}`),
@@ -145,11 +143,11 @@ export const roleAPI = {
 
 // ─── Permission API ───────────────────────────────────────────────────────────
 export const permissionAPI = {
-  getAll: () =>
-    api.get('/permissions'),
+  getAll: ({ page = 0, size = 20, search, category, active, sortBy = 'name', sortDir = 'ASC' } = {}) =>
+    api.get('/permissions', { params: { page, size, search, category, active, sortBy, sortDir } }),
 
-  search: ({ page = 0, size = 20, search, category, active, sortBy = 'name', sortDir = 'ASC' } = {}) =>
-    api.get('/permissions/search', { params: { page, size, search, category, active, sortBy, sortDir } }),
+  getActive: () =>
+    api.get('/permissions/active'),
 
   getById: (id) =>
     api.get(`/permissions/${id}`),
