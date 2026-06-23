@@ -21,31 +21,24 @@ const PermissionsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
-  const [page, setPage] = useState(0);
-  const [size, setSize] = useState(20);
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalElements, setTotalElements] = useState(0);
+
 
   const fetchPermissions = useCallback(async () => {
     try {
       setError('');
       setLoading(true);
       const response = await permissionAPI.getAll({
-        page,
-        size,
         search: searchTerm || undefined,
         category: categoryFilter === 'All' ? undefined : categoryFilter,
         active: statusFilter === 'All' ? undefined : statusFilter === 'Active',
       });
       setPermissions(response.data.content || []);
-      setTotalPages(response.data.totalPages || 0);
-      setTotalElements(response.data.totalElements || 0);
     } catch (err) {
       setError('Failed to load permissions');
     } finally {
       setLoading(false);
     }
-  }, [page, size, searchTerm, categoryFilter, statusFilter]);
+  }, [searchTerm, categoryFilter, statusFilter]);
 
   useEffect(() => {
     fetchPermissions();
@@ -133,7 +126,7 @@ const PermissionsPage = () => {
 
           <select
             value={categoryFilter}
-            onChange={(e) => { setCategoryFilter(e.target.value); setPage(0); }}
+            onChange={(e) => { setCategoryFilter(e.target.value); }}
             className="px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm"
           >
             {categories.map(cat => (
@@ -143,7 +136,7 @@ const PermissionsPage = () => {
 
           <select
             value={statusFilter}
-            onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }}
+            onChange={(e) => { setStatusFilter(e.target.value); }}
             className="px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm"
           >
             <option value="All">All Status</option>
@@ -248,28 +241,7 @@ const PermissionsPage = () => {
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-3 mt-4">
-        <div className="text-sm text-[var(--text-muted)]">
-          Showing {Math.min(page * size + 1, totalElements || 0)} - {Math.min((page + 1) * size, totalElements || 0)} of {totalElements}
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            disabled={page <= 0}
-            onClick={() => setPage((p) => Math.max(0, p - 1))}
-            className={`og-inline-btn og-inline-btn--glow ${page <= 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            Prev
-          </button>
-          <span className="text-sm text-[var(--text-muted)]">Page {page + 1} of {Math.max(1, totalPages)}</span>
-          <button
-            disabled={page + 1 >= totalPages}
-            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-            className={`og-inline-btn og-inline-btn--glow ${page + 1 >= totalPages ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            Next
-          </button>
-        </div>
-      </div>
+
 
       {showModal && (
         <PermissionModal

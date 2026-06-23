@@ -22,24 +22,10 @@ const UsersPage = () => {
   const { user: authUser } = useAuth();
   const { showToast } = useToast();
 
-  const [page, setPage] = useState(0);
-  const [size, setSize] = useState(20);
-  const [sizeOpen, setSizeOpen] = useState(false);
-  const sizeRef = useRef(null);
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalElements, setTotalElements] = useState(0);
   const [q, setQ] = useState('');
   const [roleFilter, setRoleFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
   const searchTimer = useRef(null);
-
-  const renderPageNumbers = () => {
-    const pages = [];
-    const start = Math.max(0, page - 2);
-    const end = Math.min(Math.max(0, totalPages - 1), page + 2);
-    for (let p = start; p <= end; p++) pages.push(p);
-    return pages;
-  };
 
   const fetchData = useCallback(async () => {
     try {
@@ -47,8 +33,6 @@ const UsersPage = () => {
       setLoading(true);
       const [usersRes, rolesRes] = await Promise.all([
         userAPI.getAll({
-          page,
-          size,
           q,
           role: roleFilter !== 'All' ? roleFilter : undefined,
           active: statusFilter === 'All' ? undefined : statusFilter === 'Active',
@@ -59,8 +43,6 @@ const UsersPage = () => {
       const data = usersRes.data || {};
       const items = data.content ?? data;
       setUsers(items);
-      setTotalPages(data.totalPages ?? 0);
-      setTotalElements(data.totalElements ?? (items ? items.length : 0));
       setRoles(rolesRes.data);
     } catch (err) {
       console.error(err);
@@ -68,21 +50,13 @@ const UsersPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, size, q, roleFilter, statusFilter]);
+  }, [q, roleFilter, statusFilter]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-    // close size dropdown when clicking outside
-    useEffect(() => {
-      const onDocClick = (e) => {
-        if (!sizeRef.current) return;
-        if (!sizeRef.current.contains(e.target)) setSizeOpen(false);
-      };
-      document.addEventListener('mousedown', onDocClick);
-      return () => document.removeEventListener('mousedown', onDocClick);
-    }, []);
+
 
   const handleAdd = () => {
     setSelectedUser(null);
@@ -137,7 +111,6 @@ const UsersPage = () => {
     if (searchTimer.current) clearTimeout(searchTimer.current);
     searchTimer.current = setTimeout(() => {
       setQ(value);
-      setPage(0);
     }, 400);
   };
 
@@ -172,7 +145,7 @@ const UsersPage = () => {
           
           <select
             value={roleFilter}
-            onChange={(e) => { setRoleFilter(e.target.value); setPage(0); }}
+            onChange={(e) => { setRoleFilter(e.target.value); }}
             className="px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm"
           >
             <option value="All">All Roles</option>
@@ -183,7 +156,7 @@ const UsersPage = () => {
 
           <select
             value={statusFilter}
-            onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }}
+            onChange={(e) => { setStatusFilter(e.target.value); }}
             className="px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm"
           >
             <option value="All">All Status</option>
@@ -197,7 +170,6 @@ const UsersPage = () => {
                 setQ('');
                 setRoleFilter('All');
                 setStatusFilter('All');
-                setPage(0);
               }}
               className="px-4 py-2 text-sm rounded-lg border border-[var(--border)] hover:bg-[var(--surface)] transition-all"
             >
@@ -294,82 +266,7 @@ const UsersPage = () => {
         )}
       </div>
 
-      {/* Pagination controls */}
-      <div className="flex items-center justify-between mt-4 users-pagination">
-        <div className="text-sm text-[var(--text-muted)]">
-          Showing <strong>{Math.min(page * size + 1, totalElements || 0)}</strong> - <strong>{Math.min((page + 1) * size, totalElements || 0)}</strong> of <strong>{totalElements}</strong>
-        </div>
-        <div className="flex items-center gap-3">
-          <div ref={sizeRef} className="relative inline-block og-select-wrapper og-select-pill h-9 flex items-center px-3">
-            {/* trigger button that displays current size */}
-            <button
-              type="button"
-              className="og-select-trigger w-full flex items-center justify-center gap-2"
-              aria-haspopup="listbox"
-              aria-expanded={sizeOpen}
-              onClick={() => setSizeOpen((s) => !s)}
-              onKeyDown={(e) => { if (e.key === 'Escape') setSizeOpen(false); }}
-            >
-              <span className="og-select-value text-sm font-semibold">{size}</span>
-              <svg aria-hidden="true" className="text-[var(--text-muted)]" width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
 
-            {/* custom dropdown menu */}
-            {sizeOpen && (
-              <div className="og-select-menu" role="listbox" aria-label="Items per page options">
-                {[10,20,50].map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    role="option"
-                    aria-selected={v === size}
-                    className={`og-select-option ${v === size ? 'selected' : ''}`}
-                    onClick={() => { setSize(v); setPage(0); setSizeOpen(false); }}
-                  >
-                    {v}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              disabled={page <= 0}
-              aria-disabled={page <= 0}
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
-              className={`og-inline-btn og-inline-btn--glow ${page <= 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              Prev
-            </button>
-
-            <div className="flex items-center gap-1">
-              {renderPageNumbers().map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setPage(p)}
-                  className={`px-3 py-1 rounded-md text-sm font-medium ${p === page ? 'bg-[var(--accent)]/20 text-[var(--accent)] shadow-sm' : 'bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface)]'}`}
-                >
-                  {p + 1}
-                </button>
-              ))}
-            </div>
-
-            <button
-              disabled={page + 1 >= totalPages}
-              aria-disabled={page + 1 >= totalPages}
-              onClick={() => setPage((p) => p + 1)}
-              className={`og-inline-btn og-inline-btn--glow ${page + 1 >= totalPages ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              Next
-            </button>
-          </div>
-
-          <div className="px-3 py-2 text-sm text-[var(--text-muted)]">Page {page + 1} of {Math.max(1, totalPages)}</div>
-        </div>
-      </div>
 
       {showModal && (
         <UserModal
