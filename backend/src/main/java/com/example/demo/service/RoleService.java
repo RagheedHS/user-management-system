@@ -12,6 +12,9 @@ import com.example.demo.specification.RoleSpecification;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -32,6 +35,7 @@ public class RoleService {
     private final AuditLogService auditLogService;
     private final com.example.demo.repository.UserRepository userRepository;
 
+    @CacheEvict(value = "rolesActive", allEntries = true)
     public RoleDTO createRole(CreateRoleRequest request, String username) {
         if (roleRepository.findByName(request.getName()).isPresent()) {
             throw new IllegalArgumentException("Role with name '" + request.getName() + "' already exists");
@@ -64,11 +68,13 @@ public class RoleService {
         return convertToDTO(saved);
     }
 
+    @Cacheable(value = "roles", key = "#id")
     public RoleDTO getRoleById(Long id) {
         Role role = getRole(id);
         return convertToDTO(role);
     }
 
+    @Cacheable(value = "rolesActive")
     public List<RoleDTO> getActiveRoles() {
         return roleRepository.findByActiveTrue()
                 .stream()
@@ -85,6 +91,10 @@ public class RoleService {
         return roles.map(this::convertToDTO);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "roles", key = "#id"),
+            @CacheEvict(value = "rolesActive", allEntries = true)
+    })
     public RoleDTO updateRole(Long id, UpdateRoleRequest request, String username) {
         Role role = getRole(id);
         role.setDescription(request.getDescription());
@@ -114,6 +124,10 @@ public class RoleService {
         return convertToDTO(saved);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "roles", key = "#id"),
+            @CacheEvict(value = "rolesActive", allEntries = true)
+    })
     public void deleteRole(Long id, String username) {
     Role role = getRole(id);
     
@@ -128,6 +142,10 @@ public class RoleService {
     auditLogService.log(username, "ROLE_DELETED", "Role", id, "Deleted role " + role.getName());
 }
 
+    @Caching(evict = {
+            @CacheEvict(value = "roles", key = "#roleId"),
+            @CacheEvict(value = "rolesActive", allEntries = true)
+    })
     public RoleDTO addPermissionToRole(Long roleId, Long permissionId, String username) {
         Role role = getRole(roleId);
         Permission permission = permissionRepository.findById(permissionId)
@@ -141,6 +159,10 @@ public class RoleService {
         return convertToDTO(saved);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "roles", key = "#roleId"),
+            @CacheEvict(value = "rolesActive", allEntries = true)
+    })
     public RoleDTO removePermissionFromRole(Long roleId, Long permissionId, String username) {
         Role role = getRole(roleId);
         Permission permission = permissionRepository.findById(permissionId)
@@ -181,6 +203,10 @@ public class RoleService {
         return roots;
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "roles", key = "#id"),
+            @CacheEvict(value = "rolesActive", allEntries = true)
+    })
     public RoleDTO updateParent(Long id, Long parentRoleId, String username) {
         Role role = getRole(id);
         if (parentRoleId == null) {

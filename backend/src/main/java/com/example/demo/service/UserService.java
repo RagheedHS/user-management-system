@@ -8,6 +8,9 @@ import com.example.demo.repository.UserRepository;
 import com.example.demo.specification.UserSpecification;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,6 +32,7 @@ public class UserService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @CacheEvict(value = "usersActive", allEntries = true)
     public UserDTO createUser(UserDTO dto, Long roleId) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean isAdmin = auth != null && auth.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
@@ -75,6 +79,7 @@ public class UserService {
         return sb.toString();
     }
 
+    @Cacheable(value = "users", key = "#id")
     public UserDTO getUserById(Long id) {
         User user = userRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
@@ -103,12 +108,17 @@ public class UserService {
         return userRepository.findAll(spec, pageable).map(this::convertToDTO);
     }
 
+    @Cacheable(value = "usersActive")
     public List<UserDTO> getActiveUsers() {
         return userRepository.findByActiveTrue().stream()
             .map(this::convertToDTO)
             .collect(Collectors.toList());
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "users", key = "#id"),
+            @CacheEvict(value = "usersActive", allEntries = true)
+    })
     public UserDTO updateUser(Long id, UserDTO dto, Long roleId) {
         User user = userRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
@@ -148,6 +158,10 @@ public class UserService {
         return convertToDTO(userRepository.save(user));
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "users", key = "#id"),
+            @CacheEvict(value = "usersActive", allEntries = true)
+    })
     public void deleteUser(Long id) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean isAdmin = auth != null && auth.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));

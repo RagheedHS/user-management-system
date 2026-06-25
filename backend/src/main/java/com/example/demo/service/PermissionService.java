@@ -6,6 +6,9 @@ import com.example.demo.repository.PermissionRepository;
 import com.example.demo.specification.PermissionSpecification;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +25,7 @@ import java.util.stream.Collectors;
 public class PermissionService {
     private final PermissionRepository permissionRepository;
 
+    @CacheEvict(value = "permissionsActive", allEntries = true)
     public PermissionDTO createPermission(PermissionDTO dto) {
         if (permissionRepository.findByName(dto.getName()).isPresent()) {
             throw new IllegalArgumentException("Permission with name '" + dto.getName() + "' already exists");
@@ -34,12 +38,14 @@ public class PermissionService {
         return convertToDTO(permissionRepository.save(permission));
     }
 
+    @Cacheable(value = "permissions", key = "#id")
     public PermissionDTO getPermissionById(Long id) {
         Permission permission = permissionRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Permission not found with id: " + id));
         return convertToDTO(permission);
     }
 
+    @Cacheable(value = "permissionsActive")
     public List<PermissionDTO> getActivePermissions() {
         return permissionRepository.findByActiveTrue().stream()
             .map(this::convertToDTO)
@@ -55,6 +61,10 @@ public class PermissionService {
         return permissionRepository.findAll(Specification.allOf(specs), pageable).map(this::convertToDTO);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "permissions", key = "#id"),
+            @CacheEvict(value = "permissionsActive", allEntries = true)
+    })
     public PermissionDTO updatePermission(Long id, PermissionDTO dto) {
         Permission permission = permissionRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Permission not found with id: " + id));
@@ -65,6 +75,10 @@ public class PermissionService {
         return convertToDTO(permissionRepository.save(permission));
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "permissions", key = "#id"),
+            @CacheEvict(value = "permissionsActive", allEntries = true)
+    })
     public void deletePermission(Long id) {
         if (!permissionRepository.existsById(id)) {
             throw new RuntimeException("Permission not found with id: " + id);
