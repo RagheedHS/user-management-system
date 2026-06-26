@@ -175,6 +175,10 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "users", key = "#id"),
+            @CacheEvict(value = "usersActive", allEntries = true)
+    })
     public void changePassword(Long id, String oldPassword, String newPassword) {
         User user = userRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
@@ -196,6 +200,10 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "users", key = "#id"),
+            @CacheEvict(value = "usersActive", allEntries = true)
+    })
     public void resetPassword(Long id, String newPassword) {
         User user = userRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
